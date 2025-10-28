@@ -791,7 +791,7 @@ stopAutoArena = function() {
                 let soulCards_current = $(".sc_sets_all.current").html();
                 let soulCards_one = `<span class='kws_top_bar_section soul_cards_one' style='cursor:pointer;color:${soulCards_current == "I" ? "red" : "white"}'>[<img src="https://s19.kosmiczni.pl/gfx/icons/loc_bon/mv.png">]</span>`;
                 let soulCards_two = `<span class='kws_top_bar_section soul_cards_two' style='cursor:pointer;color:${soulCards_current == "II" ? "red" : "white"}'>[<img src="https://s19.kosmiczni.pl/gfx/icons/loc_bon/exp.png">]</span>`;
-                let soulCards_three = `<span class='kws_top_bar_section soul_cards_three' style='cursor:pointer;color:${soulCards_current == "III" ? "red" : "white"}'>[<img src="https://kwa4u.cba.pl/zb.png">]</span>`;
+                let soulCards_three = `<span class='kws_top_bar_section soul_cards_three' style='cursor:pointer;color:${soulCards_current == "III" ? "red" : "white"}'>[<img src="https://raw.githubusercontent.com/Koles1910/ddd/main/zb.png">]</span>`;
                 let soulCards_four = `<span class='kws_top_bar_section soul_cards_four' style='cursor:pointer;color:${soulCards_current == "IV" ? "red" : "white"}'>KD4</span>`;
                 let soulCards_five = `<span class='kws_top_bar_section soul_cards_five' style='cursor:pointer;color:${soulCards_current == "V" ? "red" : "white"}'>[<img src="https://s19.kosmiczni.pl/gfx/icons/loc_bon/tren.png">]</span>`;
                 let additionalStats = `<span class='kws_top_bar_section additional_stats' style='cursor:pointer;color:${this.additionalTopBarVisible ? "orange" : "white"}'>STATY</span>`;				
