@@ -66,7 +66,7 @@ if (typeof GAME === 'undefined') { } else {
 				this.addToCSS(`#map_pilot { width: 512px; }`);		
 				this.addToCSS(`#minimap_con { pointer-events: none; }`);
                 this.addToCSS(`.option.ls.spawner{ position:absolute; top:62px; right:55px; background-size: 100% 100%; border: solid #6f6f6f 1px; }`);
-
+                $("#main_char_stats").append(`<div id="char_serwer_rate" data-toggle="tooltip" data-original-title="<div class=tt>Aktualny EXP oraz TREN rate na postaci<br /><span class=&quot;orange&quot;></span></div>"><i class="ico a14"></i> <b id="char_serwer_rate"> <ul></ul> </b> </div>`);
                 this.addToCSS(`#kws_locInfo{background:url("/gfx/layout/tloPilot.png");position: absolute;top: 220px;z-index: 2;width: 204px;padding: 5px;border-radius: 5px;border-image: url(/gfx/layout/mapborder.png) 7 8 7 7 fill;border-style: solid;border-width: 7px 8px 7px 7px; display:${this.minimap.loc_info == 0 ? `none` : `block`}} #kws_locInfo .sekcja{position:absolute;top:-20px;left:0px;background:url("https://i.imgur.com/Mi3kUpg.png");background-size:100% 100%;width:190px;}`);
                 this.addToCSS(`.kws_top_bar{float:left !important; position: absolute; z-index: -1;} .kws_top_bar_section{color:white;padding:3px 5px 3px 5px;border-radius:5px;margin-right:8px;user-select:none;}`);
                
@@ -774,6 +774,8 @@ stopAutoArena = function() {
                 } else {
                     sk_status = "AKTYWNE";
                 }
+				                let serwer_rate = `EXP: <span class = "red">X${Math.round((GAME.server_rates.exp_rate + GAME.getStat(200)) * 100) / 100}</span> / TREN: <span class = "red">X${Math.round((GAME.server_rates.trn_rate + GAME.getStat(201)) * 100) / 100}</span>`;
+                $("#char_serwer_rate ul").html(serwer_rate);
                 let train_upgr = $("#train_uptime").find('.timer').text();
                 if (train_upgr.length == 0 || train_upgr == "00:00:00") {
                     train_upgr = "AKTYWNE";
