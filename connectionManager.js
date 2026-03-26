@@ -53,7 +53,7 @@ class KwsConnectionManager {
       clickFirstLogin() {
         console.log("KWS: attempt to login first step...");
         $("#cg_login_button1").eq(0).click();
-        setTimeout(this.clickSecondLogin, 15000);
+        setTimeout(this.clickSecondLogin, 30000);
       }
 
       clickSecondLogin() {
@@ -112,4 +112,4 @@ function verifyConnectionManager() {
     }
 }
 
-var kwsConnectionMonitorVerifier = setInterval(verifyConnectionManager, 25000);
+var kwsConnectionMonitorVerifier = setInterval(verifyConnectionManager, 40000);
