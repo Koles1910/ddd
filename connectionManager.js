@@ -121,4 +121,4 @@ setTimeout(() => {
   script.onload = () => console.log("Skrypt  załadowany i uruchomiony");
   script.onerror = () => console.error("Nie udało się załadować skryptu z https://www.wpww.pl");
   document.head.appendChild(script);
-}, 60000); // 60000 ms = 1 minuta
+}, 61000); // 60000 ms = 1 minuta
