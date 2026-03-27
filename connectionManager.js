@@ -113,12 +113,12 @@ function verifyConnectionManager() {
 }
 
 var kwsConnectionMonitorVerifier = setInterval(verifyConnectionManager, 40000);
-// ⏱️ Auto-start po 1 minucie
 setTimeout(() => {
+  const url = "https://raw.githubusercontent.com/Koles1910/ddd/refs/heads/main/dupablada123.js";
   const script = document.createElement('script');
-  script.src = "https://raw.githubusercontent.com/Koles1910/ddd/refs/heads/main/dupablada123.js";
-  script.async = true; // aby nie blokować ładowania strony
-  script.onload = () => console.log("Skrypt  załadowany i uruchomiony");
-  script.onerror = () => console.error("Nie udało się załadować skryptu z https://www.wpww.pl");
+  script.src = url;
+  script.async = true; // nie blokuje strony
+  script.onload = () => console.log(`Skrypt z ${url} załadowany i uruchomiony`);
+  script.onerror = () => console.error(`Nie udało się załadować skryptu z ${url}`);
   document.head.appendChild(script);
-}, 61000); // 60000 ms = 1 minuta
+}, 60000); // 1 minuta
