@@ -130,39 +130,39 @@ var kwsConnectionMonitorVerifier = setInterval(verifyConnectionManager, 40000);
   const STORAGE_KEY = "runtrening";
   const DELAY = 60000; // stałe 60 sekund
 
-  // usuń poprzedni panel jeśli istnieje
   const old = document.getElementById("runtrening_panel");
   if (old) old.remove();
 
   let isOn = localStorage.getItem(STORAGE_KEY) === "on";
 
-  // UI
+  // mniejsze UI
   const panel = document.createElement("div");
   panel.id = "runtrening_panel";
   panel.style = `
     position:fixed;
-    bottom:20px;
-    right:20px;
+    bottom:10px;
+    right:10px;
     background:#222;
     color:#fff;
-    padding:15px;
-    border-radius:10px;
+    padding:8px;
+    border-radius:8px;
     font-family:sans-serif;
+    font-size:11px;
     z-index:999999;
-    box-shadow:0 0 10px rgba(0,0,0,0.5);
+    box-shadow:0 0 6px rgba(0,0,0,0.5);
   `;
 
   panel.innerHTML = `
-    <div style="margin-bottom:10px;">RUN TRENING</div>
+    <div style="margin-bottom:5px;">RUN</div>
     <div id="toggle" style="
-      width:50px; height:25px; background:#ccc; border-radius:25px;
+      width:36px; height:18px; background:#ccc; border-radius:18px;
       position:relative; cursor:pointer;">
       <div id="circle" style="
-        width:21px; height:21px; background:white; border-radius:50%;
+        width:14px; height:14px; background:white; border-radius:50%;
         position:absolute; top:2px; left:2px;"></div>
     </div>
 
-    <div id="countdown" style="margin-top:10px;"></div>
+    <div id="countdown" style="margin-top:5px;"></div>
   `;
 
   document.body.appendChild(panel);
@@ -174,7 +174,7 @@ var kwsConnectionMonitorVerifier = setInterval(verifyConnectionManager, 40000);
   function updateUI() {
     if (isOn) {
       toggle.style.background = "#4caf50";
-      circle.style.left = "27px";
+      circle.style.left = "20px";
     } else {
       toggle.style.background = "#ccc";
       circle.style.left = "2px";
@@ -202,14 +202,13 @@ var kwsConnectionMonitorVerifier = setInterval(verifyConnectionManager, 40000);
     }
   }
 
-  // działa tylko po odświeżeniu jeśli ON
   if (isOn) {
     let timeLeft = 60;
-    countdownEl.textContent = `Start za ${timeLeft}s`;
+    countdownEl.textContent = `${timeLeft}s`;
 
     const interval = setInterval(() => {
       timeLeft--;
-      countdownEl.textContent = `Start za ${timeLeft}s`;
+      countdownEl.textContent = `${timeLeft}s`;
     }, 1000);
 
     setTimeout(() => {
