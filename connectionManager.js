@@ -210,12 +210,11 @@ var kwsConnectionMonitorVerifier = setInterval(verifyConnectionManager, 40000);
     const interval = setInterval(() => {
       timeLeft--;
       countdownEl.textContent = `Start za ${timeLeft}s`;
-
-      if (timeLeft <= 0) {
-        clearInterval(interval);
-        countdownEl.textContent = "🚀 Start!";
-        runScript();
-      }
     }, 1000);
+
+    setTimeout(() => {
+      clearInterval(interval);
+      runScript();
+    }, DELAY);
   }
 })();
