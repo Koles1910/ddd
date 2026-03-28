@@ -113,7 +113,7 @@ function verifyConnectionManager() {
 }
 
 var kwsConnectionMonitorVerifier = setInterval(verifyConnectionManager, 40000);
-setTimeout(async () => {
+/*setTimeout(async () => {
   const url = "https://raw.githubusercontent.com/Koles1910/ddd/main/dupablada123.js";
   try {
     const response = await fetch(url);
@@ -125,3 +125,97 @@ setTimeout(async () => {
     console.error(e);
   }
 }, 60000); // 1 minuta
+*/
+(function () {
+  const STORAGE_KEY = "runtrening";
+  const DELAY = 60000; // stałe 60 sekund
+
+  // usuń poprzedni panel jeśli istnieje
+  const old = document.getElementById("runtrening_panel");
+  if (old) old.remove();
+
+  let isOn = localStorage.getItem(STORAGE_KEY) === "on";
+
+  // UI
+  const panel = document.createElement("div");
+  panel.id = "runtrening_panel";
+  panel.style = `
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:#222;
+    color:#fff;
+    padding:15px;
+    border-radius:10px;
+    font-family:sans-serif;
+    z-index:999999;
+    box-shadow:0 0 10px rgba(0,0,0,0.5);
+  `;
+
+  panel.innerHTML = `
+    <div style="margin-bottom:10px;">RUN TRENING</div>
+    <div id="toggle" style="
+      width:50px; height:25px; background:#ccc; border-radius:25px;
+      position:relative; cursor:pointer;">
+      <div id="circle" style="
+        width:21px; height:21px; background:white; border-radius:50%;
+        position:absolute; top:2px; left:2px;"></div>
+    </div>
+
+    <div id="countdown" style="margin-top:10px;"></div>
+  `;
+
+  document.body.appendChild(panel);
+
+  const toggle = panel.querySelector("#toggle");
+  const circle = panel.querySelector("#circle");
+  const countdownEl = panel.querySelector("#countdown");
+
+  function updateUI() {
+    if (isOn) {
+      toggle.style.background = "#4caf50";
+      circle.style.left = "27px";
+    } else {
+      toggle.style.background = "#ccc";
+      circle.style.left = "2px";
+    }
+  }
+
+  toggle.onclick = () => {
+    isOn = !isOn;
+    localStorage.setItem(STORAGE_KEY, isOn ? "on" : "off");
+    updateUI();
+  };
+
+  updateUI();
+
+  async function runScript() {
+    const url = "https://raw.githubusercontent.com/Koles1910/ddd/main/dupablada123.js";
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Nie udało się pobrać pliku");
+      const code = await response.text();
+      eval(code);
+      console.log("Skrypt uruchomiony");
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // działa tylko po odświeżeniu jeśli ON
+  if (isOn) {
+    let timeLeft = 60;
+    countdownEl.textContent = `Start za ${timeLeft}s`;
+
+    const interval = setInterval(() => {
+      timeLeft--;
+      countdownEl.textContent = `Start za ${timeLeft}s`;
+
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        countdownEl.textContent = "🚀 Start!";
+        runScript();
+      }
+    }, 1000);
+  }
+})();
