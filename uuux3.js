@@ -2343,11 +2343,11 @@ if (typeof GAME === 'undefined') {} else {
                         if (GAME.char_data.x == GAME.map_wanteds.x && GAME.char_data.y == GAME.map_wanteds.y) {
                             setTimeout(function() {
                                 LPVM.KillWanted();
-                            }, 500);
+                            }, 150);
                         } else {
                             setTimeout(function() {
                                 LPVM.Go();
-                            }, 1000);
+                            }, 150);
                         }
                     } else {
                         setTimeout(() => {
