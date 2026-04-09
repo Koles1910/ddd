@@ -1,6 +1,6 @@
 var checked = false;
 var latency = -1;
-const gitUrl = 'https://raw.githubusercontent.com/Koles1910/ddd'
+const gitUrl = 'https://raw.githubusercontent.com/Koles1910/ddd/'
 const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
 if (typeof GAME === 'undefined') { } else {
@@ -1228,7 +1228,7 @@ if (typeof GAME === 'undefined') { } else {
                 for (var i = 0; i < 6; i++) {
                     mob += `<div class="spawn_row"><div class="newCheckbox"><input id="kws_spawner_ignore_${i}" type="checkbox" class="kws_spawner_check" name="ignoreMobs" value="${i}" ${(GAME.spawner && GAME.spawner[1][i] ? '' : 'checked')} /><label for="kws_spawner_ignore_${i}"></label></div>${LNG.lab457}&nbsp;<b>${LNG['mob_rank' + i]}</b></div>`;
                 }
-                mob += `<div class="spawn_row" style="flex-direction: column;align-items: center;"><div>Użyte PA na spawn</div><div class="game_input small"><input id="kws_pa_max" name="usePaToSpawn" type="text" value="1000"></div></div>`;
+                mob += `<div class="spawn_row" style="flex-direction: column;align-items: center;"><div>Użyte PA na spawn</div><div class="game_input small"><input id="kws_pa_max" name="usePaToSpawn" type="text" value="${GAME.spawner[0]}"></div></div>`;
                 return mob;
             }
             updatePaToSpawn(pats) {
@@ -1724,7 +1724,7 @@ if (typeof GAME === 'undefined') { } else {
                 $("body").on("click", ".qlink.load_afo", () => {
                     if (typeof this.afo_is_loaded == 'undefined') {
                         this.afo_is_loaded = true;
-                        $.get(gitUrl + "/main/uuux3.js", (data) => {
+                        $.get(gitUrl + "/main/uncodedeeee.js", (data) => {
                             $("body").append(`<script>${data}<\/script>`);
                         }).fail(() => {
                             GAME.komunikat("Wystąpił błąd w ładowaniu skryptu, odśwież stronę i spróbuj ponownie!");
