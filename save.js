@@ -30,6 +30,15 @@ let recordingEnabled = JSON.parse(localStorage.getItem('recordingEnabled')) || f
 let stopReplay      = false;
 let replayAlreadyRan = false;
 
+// ★ ID DO ŚLEDZENIA (resp_bh1..18, resp_on, resp_off)
+const TRACKED_IDS = [
+    "resp_bh1",  "resp_bh2",  "resp_bh3",  "resp_bh4",  "resp_bh5",
+    "resp_bh6",  "resp_bh7",  "resp_bh8",  "resp_bh9",  "resp_bh10",
+    "resp_bh11", "resp_bh12", "resp_bh13", "resp_bh14", "resp_bh15",
+    "resp_bh16", "resp_bh17", "resp_bh18",
+    "resp_on",   "resp_off"
+];
+
 // ====== ODTWARZANIE KLIKNIĘĆ ======
 function replaySavedClicks() {
 
@@ -41,7 +50,7 @@ function replaySavedClicks() {
 
     console.log('Attempting to replay saved clicks...');
 
-    // ★ TABLICA — zachowuje kolejność klikania
+    // Tablica zachowuje kolejnosc
     const savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
 
     if (savedClicks.length === 0 || stopReplay) {
@@ -51,15 +60,31 @@ function replaySavedClicks() {
 
     console.log('Found saved clicks (w kolejnosci):', savedClicks);
 
-    savedClicks.forEach((buttonClass, index) => {
+    savedClicks.forEach((entry, index) => {
         setTimeout(() => {
             if (stopReplay) return;
 
-            const buttons = document.querySelectorAll(`.${buttonClass}`);
-            buttons.forEach(button => {
-                console.log(`[REPLAY ${index + 1}/${savedClicks.length}] Klikam: ${buttonClass}`);
-                button.click();
-            });
+            // ★ Rozpoznaj czy to ID czy klasa
+            // Format: "id:resp_bh1" lub "class:gh_button"
+            const [type, value] = entry.split(':');
+
+            let elements = [];
+
+            if (type === 'id') {
+                const el = document.getElementById(value);
+                if (el) elements = [el];
+            } else if (type === 'class') {
+                elements = Array.from(document.querySelectorAll(`.${value}`));
+            }
+
+            if (elements.length > 0) {
+                elements.forEach(el => {
+                    console.log(`[REPLAY ${index + 1}/${savedClicks.length}] Klikam ${type}:`, value);
+                    el.click();
+                });
+            } else {
+                console.warn(`[REPLAY ${index + 1}] Brak elementu: ${entry}`);
+            }
         }, index * 2000);
     });
 }
@@ -92,29 +117,45 @@ function checkMainPanel() {
     const respPanel = document.getElementById("resp_Panel");
     if (respPanel) {
         enableLocalStorageWithClass('.resp_button');
+        enableLocalStorageForIds(); // ★ NOWE
     }
 }
 
-// ★ POPRAWIONE — dodaje do TABLICY w kolejności klikania
-function handleButtonClick(event) {
-    const buttonClass = event.target.className.replace(/\s+/g, '.');
+// ★ NOWE: zapis kliknięć z klas
+function handleButtonClickByClass(event) {
+    const buttonClass = event.currentTarget.className.replace(/\s+/g, '.');
+    const entry = `class:${buttonClass}`;
 
-    // Wczytaj jako tablice
     let savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
 
-    // Sprawdz czy juz jest w tablicy (zeby nie duplikowac)
-    if (!savedClicks.includes(buttonClass)) {
-        savedClicks.push(buttonClass);
+    if (!savedClicks.includes(entry)) {
+        savedClicks.push(entry);
         localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
-        console.log(`Click saved [${savedClicks.length}]:`, buttonClass);
+        console.log(`Click saved [${savedClicks.length}] CLASS:`, buttonClass);
+    }
+}
+
+// ★ NOWE: zapis kliknięć z ID
+function handleButtonClickById(event) {
+    const elementId = event.currentTarget.id;
+    if (!elementId) return;
+
+    const entry = `id:${elementId}`;
+
+    let savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
+
+    if (!savedClicks.includes(entry)) {
+        savedClicks.push(entry);
+        localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
+        console.log(`Click saved [${savedClicks.length}] ID:`, elementId);
     }
 }
 
 function enableLocalStorageWithClass(className) {
     const divs = document.querySelectorAll(className);
     divs.forEach(div => {
-        div.removeEventListener('click', handleButtonClick);
-        div.addEventListener('click', handleButtonClick);
+        div.removeEventListener('click', handleButtonClickByClass);
+        div.addEventListener('click', handleButtonClickByClass);
     });
 }
 
@@ -134,9 +175,23 @@ function enableLocalStorage() {
     buttonClasses.forEach(className => {
         const buttons = document.querySelectorAll(className);
         buttons.forEach(button => {
-            button.removeEventListener('click', handleButtonClick);
-            button.addEventListener('click', handleButtonClick);
+            button.removeEventListener('click', handleButtonClickByClass);
+            button.addEventListener('click', handleButtonClickByClass);
         });
+    });
+
+    // ★ NOWE: dodatkowo śledź ID
+    enableLocalStorageForIds();
+}
+
+// ★ NOWE: rejestracja listenerow dla ID
+function enableLocalStorageForIds() {
+    TRACKED_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.removeEventListener('click', handleButtonClickById);
+            el.addEventListener('click', handleButtonClickById);
+        }
     });
 }
 
@@ -167,6 +222,19 @@ document.body.appendChild(startStopButton);
 
 setTimeout(runCodeWithDelay, 1000);
 
+// ★ NOWE: obserwator DOM — gdy pojawia się resp_bh1..18 / resp_on / resp_off,
+// automatycznie podpina im listener (potrzebne po pojawieniu się resp_Panel)
+const idObserver = new MutationObserver(() => {
+    if (recordingEnabled || !replayAlreadyRan) {
+        enableLocalStorageForIds();
+    }
+});
+
+idObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
 // ============================================================
 // ★ SEKWENCJA:
 //   T = 40s  →  GAME.page_switch('game_map')
@@ -175,15 +243,14 @@ setTimeout(runCodeWithDelay, 1000);
 //   T = 50s  →  replay zapisanych klikow (co 2s)
 // ============================================================
 
-// ★ Obsluga obu formatow — tablica i stary obiekt
+// Obsluga obu formatow — tablica i stary obiekt
 let savedClicksRaw = JSON.parse(localStorage.getItem('savedClicks'));
 let hasSavedClicks = false;
 
 if (Array.isArray(savedClicksRaw)) {
     hasSavedClicks = savedClicksRaw.length > 0;
 } else if (savedClicksRaw && typeof savedClicksRaw === 'object') {
-    // Stary format — konwertuj na tablice
-    const converted = Object.keys(savedClicksRaw);
+    const converted = Object.keys(savedClicksRaw).map(k => `class:${k}`);
     if (converted.length > 0) {
         localStorage.setItem('savedClicks', JSON.stringify(converted));
         hasSavedClicks = true;
