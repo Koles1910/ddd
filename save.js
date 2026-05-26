@@ -30,16 +30,17 @@ let recordingEnabled = JSON.parse(localStorage.getItem('recordingEnabled')) || f
 let stopReplay      = false;
 let replayAlreadyRan = false;
 
-// ★ ZWYKLE PRZYCISKI Z KLAS
+// ★ ZWYKŁE PRZYCISKI Z KLAS — selektory do wyszukania + nazwa do zapisu
 const TRACKED_BUTTON_CLASSES = [
-    'gh_button',
-    'pvp_button',
-    'lpvm_button',
-    'res_button',
-    'code_button',
-    'manage_auto_abyss',
-    'manage_auto_arena',
-    'manage_autoExpeditions'
+    { selector: '.gh_button',                          key: 'gh_button' },
+    { selector: '.pvp_button',                         key: 'pvp_button' },
+    { selector: '.lpvm_button',                        key: 'lpvm_button' },
+    { selector: '.res_button',                         key: 'res_button' },
+    { selector: '.code_button',                        key: 'code_button' },
+    { selector: '.resp_button',                        key: 'resp_button' },
+    { selector: '.qlink.manage_auto_abyss',            key: 'manage_auto_abyss' },
+    { selector: '.qlink.manage_auto_arena',            key: 'manage_auto_arena' },
+    { selector: '.qlink.manage_autoExpeditions',       key: 'manage_autoExpeditions' }
 ];
 
 // ★ KLASY RESP_BUTTON (w panelu BŁOGO)
@@ -72,20 +73,28 @@ function replaySavedClicks() {
     console.log('Found saved clicks (w kolejnosci):', savedClicks);
 
     savedClicks.forEach((entry, index) => {
+        // ★ Pierwszy klik od razu (po 10s opoznieniu w setTimeout glownej sekwencji)
+        // Kolejne kliki co 3s
+        const delay = index * 3000;
+
         setTimeout(() => {
             if (stopReplay) return;
 
-            // ★ Format: "resp:resp_bh1" lub "btn:gh_button"
+            // Format: "resp:resp_bh1" lub "btn:gh_button"
             const [type, value] = entry.split(':');
 
             let element = null;
 
             if (type === 'resp') {
-                // Resp button — szukaj resp_button z konkretną klasą
                 element = document.querySelector(`.resp_button.${value}`);
             } else if (type === 'btn') {
-                // Zwykły przycisk z listy TRACKED_BUTTON_CLASSES
-                element = document.querySelector(`.${value}`);
+                // Znajdz w liscie po key
+                const def = TRACKED_BUTTON_CLASSES.find(b => b.key === value);
+                if (def) {
+                    element = document.querySelector(def.selector);
+                } else {
+                    element = document.querySelector(`.${value}`);
+                }
             }
 
             if (element) {
@@ -94,7 +103,7 @@ function replaySavedClicks() {
             } else {
                 console.warn(`[REPLAY ${index + 1}] Brak elementu: ${entry}`);
             }
-        }, index * 2000);
+        }, delay);
     });
 }
 
@@ -134,20 +143,26 @@ function handleButtonClickByClass(event) {
     const target = event.currentTarget;
     const classList = Array.from(target.classList);
 
-    const matched = classList.find(c => TRACKED_BUTTON_CLASSES.includes(c));
+    // Znajdz definicje z TRACKED_BUTTON_CLASSES
+    const matched = TRACKED_BUTTON_CLASSES.find(def => {
+        // Selektor np ".qlink.manage_auto_abyss" -> klasy: qlink, manage_auto_abyss
+        const requiredClasses = def.selector.split('.').filter(c => c);
+        return requiredClasses.every(c => classList.includes(c));
+    });
+
     if (!matched) return;
 
-    const entry = `btn:${matched}`;
+    const entry = `btn:${matched.key}`;
     let savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
 
     if (!savedClicks.includes(entry)) {
         savedClicks.push(entry);
         localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
-        console.log(`Click saved [${savedClicks.length}] BTN:`, matched);
+        console.log(`Click saved [${savedClicks.length}] BTN:`, matched.key);
     }
 }
 
-// ★ Zapis klikniecia resp_button — wykrywa ktora klase resp_bh*/on/off ma
+// ★ Zapis klikniecia resp_button (resp_bh*/on/off)
 function handleRespButtonClick(event) {
     const target = event.currentTarget;
     const classList = Array.from(target.classList);
@@ -165,7 +180,7 @@ function handleRespButtonClick(event) {
     }
 }
 
-// ★ Rejestracja listenerow na resp_button
+// ★ Rejestracja listenerow na resp_button (resp_bh*/on/off)
 function enableRespButtonListeners() {
     TRACKED_RESP_CLASSES.forEach(cls => {
         const buttons = document.querySelectorAll(`.resp_button.${cls}`);
@@ -178,8 +193,8 @@ function enableRespButtonListeners() {
 
 function enableLocalStorage() {
     // Zwykłe przyciski
-    TRACKED_BUTTON_CLASSES.forEach(cls => {
-        const buttons = document.querySelectorAll(`.${cls}`);
+    TRACKED_BUTTON_CLASSES.forEach(def => {
+        const buttons = document.querySelectorAll(def.selector);
         buttons.forEach(button => {
             button.removeEventListener('click', handleButtonClickByClass);
             button.addEventListener('click', handleButtonClickByClass);
@@ -217,9 +232,11 @@ document.body.appendChild(startStopButton);
 
 setTimeout(runCodeWithDelay, 1000);
 
-// ★ MutationObserver — automatycznie podpinaj listenery do nowo dodanych resp_button
+// ★ MutationObserver — automatycznie podpinaj listenery do nowych elementow
 const domObserver = new MutationObserver(() => {
-    enableRespButtonListeners();
+    if (recordingEnabled || !replayAlreadyRan) {
+        enableRespButtonListeners();
+    }
 });
 
 domObserver.observe(document.body, {
@@ -227,7 +244,7 @@ domObserver.observe(document.body, {
     subtree: true
 });
 
-// ★ Dodatkowy interval — co 2s sprawdza nowo dodane resp_button (po otwarciu panelu BŁOGO)
+// ★ Dodatkowy interval — sprawdza nowo dodane resp_button
 setInterval(() => {
     if (recordingEnabled || !replayAlreadyRan) {
         enableRespButtonListeners();
@@ -238,8 +255,11 @@ setInterval(() => {
 // ★ SEKWENCJA:
 //   T = 40s  →  GAME.page_switch('game_map')
 //   T = 43s  →  klawisz "0"
-//   T = 45s  →  klik .qlink.load_afo  (otwiera panel BŁOGO)
-//   T = 55s  →  replay zapisanych klikow (czeka 10s na panel)
+//   T = 45s  →  klik .qlink.load_afo
+//   T = 55s  →  pierwszy replay (10s po klikniciu load_afo)
+//   T = 58s  →  drugi (+3s)
+//   T = 61s  →  trzeci (+3s)
+//   ...
 // ============================================================
 
 // Obsluga obu formatow — tablica i stary obiekt
@@ -249,17 +269,19 @@ let hasSavedClicks = false;
 if (Array.isArray(savedClicksRaw)) {
     hasSavedClicks = savedClicksRaw.length > 0;
 } else if (savedClicksRaw && typeof savedClicksRaw === 'object') {
-    // Stary format obiektu — konwertuj na tablice z prefixem btn:
+    // Konwersja starego formatu obiektu na tablice
     const converted = Object.keys(savedClicksRaw).map(k => {
-        // Sprobuj rozpoznac czy to resp czy btn
         const cleanClass = k.replace(/\./g, ' ').trim().split(' ').pop();
+
         if (TRACKED_RESP_CLASSES.includes(cleanClass)) {
             return `resp:${cleanClass}`;
         }
-        const btnMatch = TRACKED_BUTTON_CLASSES.find(c => k.includes(c));
+
+        const btnMatch = TRACKED_BUTTON_CLASSES.find(def => k.includes(def.key));
         if (btnMatch) {
-            return `btn:${btnMatch}`;
+            return `btn:${btnMatch.key}`;
         }
+
         return `btn:${cleanClass}`;
     });
 
@@ -294,7 +316,7 @@ if (hasSavedClicks) {
         document.dispatchEvent(keyboardEvent);
     }, 43000);
 
-    // ──────── KROK 3 (45s): klik w .qlink.load_afo (otwiera panel BŁOGO) ────────
+    // ──────── KROK 3 (45s): klik w .qlink.load_afo ────────
     setTimeout(() => {
         console.log('[3/4] Klikam .qlink.load_afo');
         const elementToClick = document.querySelector('.qlink.load_afo');
@@ -305,9 +327,9 @@ if (hasSavedClicks) {
         }
     }, 45000);
 
-    // ──────── KROK 4 (55s): replay — 10s po otwarciu panelu BŁOGO ────────
+    // ──────── KROK 4 (55s): replay — 10s po klikniciu load_afo ────────
     setTimeout(() => {
-        console.log('[4/4] Odtwarzanie zapisanych klikniec...');
+        console.log('[4/4] Odtwarzanie zapisanych klikniec (co 3s)...');
         enableLocalStorage();
         replaySavedClicks();
     }, 55000);
