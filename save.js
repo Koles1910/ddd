@@ -30,19 +30,6 @@ let recordingEnabled = JSON.parse(localStorage.getItem('recordingEnabled')) || f
 let stopReplay      = false;
 let replayAlreadyRan = false;
 
-// ★ ZWYKŁE PRZYCISKI (poza panelem BŁOGO)
-const TRACKED_BUTTON_CLASSES = [
-    { selector: '.gh_button',                          key: 'gh_button' },
-    { selector: '.pvp_button',                         key: 'pvp_button' },
-    { selector: '.lpvm_button',                        key: 'lpvm_button' },
-    { selector: '.res_button',                         key: 'res_button' },
-    { selector: '.code_button',                        key: 'code_button' },
-    { selector: '.resp_button',                        key: 'resp_button' },
-    { selector: '.qlink.manage_auto_abyss',            key: 'manage_auto_abyss' },
-    { selector: '.qlink.manage_auto_arena',            key: 'manage_auto_arena' },
-    { selector: '.qlink.manage_autoExpeditions',       key: 'manage_autoExpeditions' }
-];
-
 // ★ KLASY RESP_BUTTON (w panelu BŁOGO)
 const TRACKED_RESP_CLASSES = [
     "resp_bh1",  "resp_bh2",  "resp_bh3",  "resp_bh4",  "resp_bh5",
@@ -52,33 +39,7 @@ const TRACKED_RESP_CLASSES = [
     "resp_on",   "resp_off"
 ];
 
-// ====== POMOCNICZE — klik pojedynczego wpisu ======
-function clickEntry(entry, currentNum, totalNum) {
-    if (stopReplay) return;
-
-    const [type, value] = entry.split(':');
-    let element = null;
-
-    if (type === 'resp') {
-        element = document.querySelector(`.resp_button.${value}`);
-    } else if (type === 'btn') {
-        const def = TRACKED_BUTTON_CLASSES.find(b => b.key === value);
-        element = def ? document.querySelector(def.selector) : document.querySelector(`.${value}`);
-    }
-
-    if (element) {
-        console.log(`[REPLAY ${currentNum}/${totalNum}] Klikam ${type}:`, value);
-
-        try { element.click(); } catch (e) {}
-        if (typeof $ !== 'undefined') {
-            try { $(element).trigger('click'); } catch (e) {}
-        }
-    } else {
-        console.warn(`[REPLAY ${currentNum}/${totalNum}] Brak elementu: ${entry}`);
-    }
-}
-
-// ====== ODTWARZANIE KLIKNIĘĆ — najpierw setup, potem 2 fazy ======
+// ====== ODTWARZANIE KLIKNIĘĆ ======
 function replaySavedClicks() {
 
     if (replayAlreadyRan) {
@@ -87,82 +48,30 @@ function replaySavedClicks() {
     }
     replayAlreadyRan = true;
 
-    const savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
+    console.log('Attempting to replay saved clicks...');
+    const savedClicks  = JSON.parse(localStorage.getItem('savedClicks')) || {};
+    const clickClasses = Object.keys(savedClicks);
 
-    if (savedClicks.length === 0 || stopReplay) {
-        console.log('No saved clicks or stopped.');
-        return;
-    }
+    if (clickClasses.length > 0 && !stopReplay) {
+        console.log('Found saved clicks:', clickClasses);
 
-    console.log('Found saved clicks (w kolejnosci):', savedClicks);
+        clickClasses.forEach((buttonClass, index) => {
 
-    // ★ Podzial na fazy
-    const btnClicks  = savedClicks.filter(e => e.startsWith('btn:'));
-    const respClicks = savedClicks.filter(e => e.startsWith('resp:'));
-
-    console.log(`Faza 1 (btn): ${btnClicks.length} klikow`);
-    console.log(`Faza 2 (resp): ${respClicks.length} klikow`);
-
-    let timeline = 0;
-    const total = savedClicks.length;
-    let clickNum = 0;
-
-    // ────────── KROK A: GAME.page_switch('game_map') ──────────
-    setTimeout(() => {
-        console.log('[SEQ A] GAME.page_switch(\'game_map\')');
-        try {
-            GAME.page_switch('game_map');
-        } catch (e) {
-            console.warn('GAME.page_switch nieudane:', e);
-        }
-    }, timeline);
-    timeline += 3000;
-
-    // ────────── KROK B: klawisz "0" ──────────
-    setTimeout(() => {
-        console.log('[SEQ B] Klawisz 0');
-        const ke = new KeyboardEvent('keydown', {
-            key: '0',
-            code: 'Digit0',
-            keyCode: 48,
-            which: 48,
-            bubbles: true,
-            cancelable: true
+            setTimeout(() => {
+                if (!stopReplay) {
+                    const buttons = document.querySelectorAll(`.${buttonClass}`);
+                    buttons.forEach(button => {
+                        console.log('Clicking button:', buttonClass);
+                        button.click();
+                        savedClicks[buttonClass] = { clicked: true };
+                        localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
+                    });
+                }
+            }, index * 2000);
         });
-        document.dispatchEvent(ke);
-    }, timeline);
-    timeline += 2000;
-
-    // ────────── KROK C: klik .qlink.load_afo ──────────
-    setTimeout(() => {
-        console.log('[SEQ C] Klik .qlink.load_afo');
-        const el = document.querySelector('.qlink.load_afo');
-        if (el) {
-            el.click();
-            if (typeof $ !== 'undefined') $(el).trigger('click');
-        } else {
-            console.warn('Brak .qlink.load_afo');
-        }
-    }, timeline);
-    timeline += 10000;  // ★ 10s na otwarcie panelu BŁOGO
-
-    // ────────── FAZA 1: btn (gh, pvp, manage_auto_* itp) co 3s ──────────
-    btnClicks.forEach(entry => {
-        clickNum++;
-        const num = clickNum;
-        setTimeout(() => clickEntry(entry, num, total), timeline);
-        timeline += 3000;
-    });
-
-    // ────────── FAZA 2: resp_bh*/on/off co 3s ──────────
-    respClicks.forEach(entry => {
-        clickNum++;
-        const num = clickNum;
-        setTimeout(() => clickEntry(entry, num, total), timeline);
-        timeline += 3000;
-    });
-
-    console.log(`[SEQ] Calkowity czas sekwencji: ${timeline / 1000}s`);
+    } else {
+        console.log('No saved clicks found in local storage or stopped replaying.');
+    }
 }
 
 // ====== START / STOP ======
@@ -192,70 +101,76 @@ function checkMainPanel() {
 
     const respPanel = document.getElementById("resp_Panel");
     if (respPanel) {
-        enableRespButtonListeners();
+        enableLocalStorageWithClass('.resp_button');
+        enableRespBhListeners(); // ★ NOWE
     }
 }
 
-// ★ Zapis klikniecia zwyklego przycisku
-function handleButtonClickByClass(event) {
-    const target = event.currentTarget;
+// ★ POPRAWIONE handleButtonClick — dla resp_bh* zapisuje TYLKO unikalna klase
+function handleButtonClick(event) {
+    const target = event.currentTarget || event.target;
     const classList = Array.from(target.classList);
 
-    const matched = TRACKED_BUTTON_CLASSES.find(def => {
-        const requiredClasses = def.selector.split('.').filter(c => c);
-        return requiredClasses.every(c => classList.includes(c));
-    });
+    // ★ Sprawdz czy to resp_bh*/on/off — zapisz unikalna klase
+    const respMatch = classList.find(c => TRACKED_RESP_CLASSES.includes(c));
 
-    if (!matched) return;
+    let buttonClass;
+    if (respMatch) {
+        buttonClass = respMatch;
+    } else {
+        buttonClass = target.className.replace(/\s+/g, '.');
+    }
 
-    const entry = `btn:${matched.key}`;
-    let savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
+    let savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || {};
 
-    if (!savedClicks.includes(entry)) {
-        savedClicks.push(entry);
+    if (!savedClicks[buttonClass]) {
+        savedClicks[buttonClass] = { clicked: false };
         localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
-        console.log(`Click saved [${savedClicks.length}] BTN:`, matched.key);
+        console.log('Click saved:', buttonClass);
     }
 }
 
-// ★ Zapis klikniecia resp_button
-function handleRespButtonClick(event) {
-    const target = event.currentTarget;
-    const classList = Array.from(target.classList);
-
-    const matched = classList.find(c => TRACKED_RESP_CLASSES.includes(c));
-    if (!matched) return;
-
-    const entry = `resp:${matched}`;
-    let savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
-
-    if (!savedClicks.includes(entry)) {
-        savedClicks.push(entry);
-        localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
-        console.log(`Click saved [${savedClicks.length}] RESP:`, matched);
-    }
-}
-
-function enableRespButtonListeners() {
-    TRACKED_RESP_CLASSES.forEach(cls => {
-        const buttons = document.querySelectorAll(`.resp_button.${cls}`);
-        buttons.forEach(btn => {
-            btn.removeEventListener('click', handleRespButtonClick);
-            btn.addEventListener('click', handleRespButtonClick);
-        });
+function enableLocalStorageWithClass(className) {
+    const divs = document.querySelectorAll(className);
+    divs.forEach(div => {
+        div.removeEventListener('click', handleButtonClick);
+        div.addEventListener('click', handleButtonClick);
     });
 }
 
 function enableLocalStorage() {
-    TRACKED_BUTTON_CLASSES.forEach(def => {
-        const buttons = document.querySelectorAll(def.selector);
+    const buttonClasses = [
+        '.gh_button',
+        '.pvp_button',
+        '.lpvm_button',
+        '.res_button',
+        '.code_button',
+        '.resp_button',
+        '.qlink.manage_auto_abyss',
+        '.qlink.manage_auto_arena',
+        '.qlink.manage_autoExpeditions'
+    ];
+
+    buttonClasses.forEach(className => {
+        const buttons = document.querySelectorAll(className);
         buttons.forEach(button => {
-            button.removeEventListener('click', handleButtonClickByClass);
-            button.addEventListener('click', handleButtonClickByClass);
+            button.removeEventListener('click', handleButtonClick);
+            button.addEventListener('click', handleButtonClick);
         });
     });
 
-    enableRespButtonListeners();
+    enableRespBhListeners(); // ★ NOWE
+}
+
+// ★ NOWE — rejestracja listenerow na resp_bh*/on/off
+function enableRespBhListeners() {
+    TRACKED_RESP_CLASSES.forEach(cls => {
+        const buttons = document.querySelectorAll(`.resp_button.${cls}`);
+        buttons.forEach(btn => {
+            btn.removeEventListener('click', handleButtonClick);
+            btn.addEventListener('click', handleButtonClick);
+        });
+    });
 }
 
 // ====== PRZYCISK ON/OFF ======
@@ -285,10 +200,11 @@ document.body.appendChild(startStopButton);
 
 setTimeout(runCodeWithDelay, 1000);
 
-// ★ MutationObserver
+// ★ NOWE — automatycznie podpinaj listenery do nowych resp_bh*
+// (potrzebne bo panel BŁOGO jest tworzony dopiero po klikniciu load_afo)
 const domObserver = new MutationObserver(() => {
     if (recordingEnabled || !replayAlreadyRan) {
-        enableLocalStorage();
+        enableRespBhListeners();
     }
 });
 
@@ -299,50 +215,60 @@ domObserver.observe(document.body, {
 
 setInterval(() => {
     if (recordingEnabled || !replayAlreadyRan) {
-        enableLocalStorage();
+        enableRespBhListeners();
     }
 }, 2000);
 
 // ============================================================
-// ★ SEKWENCJA — start 40s po odswiezeniu
+// ★ SEKWENCJA:
+//   T = 40s  →  GAME.page_switch('game_map')
+//   T = 43s  →  klawisz "0"
+//   T = 45s  →  klik .qlink.load_afo
+//   T = 55s  →  replay zapisanych klikow (10s na otwarcie BŁOGO, co 3s)
 // ============================================================
+const savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || {};
 
-let savedClicksRaw = JSON.parse(localStorage.getItem('savedClicks'));
-let hasSavedClicks = false;
+if (Object.keys(savedClicks).length > 0) {
+    console.log('Znaleziono zapisane kliknięcia. Start sekwencji za 40s...');
 
-if (Array.isArray(savedClicksRaw)) {
-    hasSavedClicks = savedClicksRaw.length > 0;
-} else if (savedClicksRaw && typeof savedClicksRaw === 'object') {
-    const converted = Object.keys(savedClicksRaw).map(k => {
-        const cleanClass = k.replace(/\./g, ' ').trim().split(' ').pop();
-
-        if (TRACKED_RESP_CLASSES.includes(cleanClass)) {
-            return `resp:${cleanClass}`;
-        }
-
-        const btnMatch = TRACKED_BUTTON_CLASSES.find(def => k.includes(def.key));
-        if (btnMatch) {
-            return `btn:${btnMatch.key}`;
-        }
-
-        return `btn:${cleanClass}`;
-    });
-
-    if (converted.length > 0) {
-        localStorage.setItem('savedClicks', JSON.stringify(converted));
-        hasSavedClicks = true;
-        console.log('Skonwertowano stary format:', converted);
-    }
-}
-
-if (hasSavedClicks) {
-    console.log('Znaleziono zapisane kliknięcia. Start za 40s...');
-
+    // ──────── KROK 1 (40s): przełączenie na game_map ────────
     setTimeout(() => {
-        console.log('[REPLAY] Start sekwencji...');
+        console.log('[1/4] GAME.page_switch(\'game_map\')');
+        GAME.page_switch('game_map');
+    }, 40000);
+
+    // ──────── KROK 2 (43s): naciśnięcie klawisza "0" ────────
+    setTimeout(() => {
+        console.log('[2/4] Symuluje nacisniecie klawisza 0');
+
+        const keyboardEvent = new KeyboardEvent('keydown', {
+            key: '0',
+            code: 'Digit0',
+            keyCode: 48,
+            which: 48,
+            bubbles: true,
+            cancelable: true
+        });
+        document.dispatchEvent(keyboardEvent);
+    }, 43000);
+
+    // ──────── KROK 3 (45s): klik w .qlink.load_afo ────────
+    setTimeout(() => {
+        console.log('[3/4] Klikam .qlink.load_afo');
+        const elementToClick = document.querySelector('.qlink.load_afo');
+        if (elementToClick) {
+            elementToClick.click();
+        } else {
+            console.warn('Nie znaleziono .qlink.load_afo');
+        }
+    }, 45000);
+
+    // ──────── KROK 4 (55s): replay — 10s po otwarciu BŁOGO ────────
+    setTimeout(() => {
+        console.log('[4/4] Odtwarzanie zapisanych klikniec...');
         enableLocalStorage();
         replaySavedClicks();
-    }, 40000);
+    }, 55000);
 
 } else {
     console.log('Nie znaleziono zapisanych kliknięć w localStorage.');
