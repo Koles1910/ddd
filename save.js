@@ -30,13 +30,25 @@ let recordingEnabled = JSON.parse(localStorage.getItem('recordingEnabled')) || f
 let stopReplay      = false;
 let replayAlreadyRan = false;
 
-// ★ ID DO ŚLEDZENIA (resp_bh1..18, resp_on, resp_off)
-const TRACKED_IDS = [
+// ★ ŚLEDZONE KLASY RESP — to sa KLASY (resp_button + resp_bh1)
+const TRACKED_RESP_CLASSES = [
     "resp_bh1",  "resp_bh2",  "resp_bh3",  "resp_bh4",  "resp_bh5",
     "resp_bh6",  "resp_bh7",  "resp_bh8",  "resp_bh9",  "resp_bh10",
     "resp_bh11", "resp_bh12", "resp_bh13", "resp_bh14", "resp_bh15",
     "resp_bh16", "resp_bh17", "resp_bh18",
     "resp_on",   "resp_off"
+];
+
+// ★ ZWYKLE PRZYCISKI Z KLAS
+const TRACKED_BUTTON_CLASSES = [
+    'gh_button',
+    'pvp_button',
+    'lpvm_button',
+    'res_button',
+    'code_button',
+    'manage_auto_abyss',
+    'manage_auto_arena',
+    'manage_autoExpeditions'
 ];
 
 // ====== ODTWARZANIE KLIKNIĘĆ ======
@@ -50,7 +62,6 @@ function replaySavedClicks() {
 
     console.log('Attempting to replay saved clicks...');
 
-    // Tablica zachowuje kolejnosc
     const savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
 
     if (savedClicks.length === 0 || stopReplay) {
@@ -64,24 +75,21 @@ function replaySavedClicks() {
         setTimeout(() => {
             if (stopReplay) return;
 
-            // ★ Rozpoznaj czy to ID czy klasa
-            // Format: "id:resp_bh1" lub "class:gh_button"
+            // ★ Format: "resp:resp_bh1" lub "btn:gh_button"
             const [type, value] = entry.split(':');
 
-            let elements = [];
+            let element = null;
 
-            if (type === 'id') {
-                const el = document.getElementById(value);
-                if (el) elements = [el];
-            } else if (type === 'class') {
-                elements = Array.from(document.querySelectorAll(`.${value}`));
+            if (type === 'resp') {
+                // Szukaj resp_button z odpowiednia klasa (np. .resp_button.resp_bh1)
+                element = document.querySelector(`.resp_button.${value}`);
+            } else if (type === 'btn') {
+                element = document.querySelector(`.${value}`);
             }
 
-            if (elements.length > 0) {
-                elements.forEach(el => {
-                    console.log(`[REPLAY ${index + 1}/${savedClicks.length}] Klikam ${type}:`, value);
-                    el.click();
-                });
+            if (element) {
+                console.log(`[REPLAY ${index + 1}/${savedClicks.length}] Klikam ${type}:`, value);
+                element.click();
             } else {
                 console.warn(`[REPLAY ${index + 1}] Brak elementu: ${entry}`);
             }
@@ -113,85 +121,68 @@ function checkMainPanel() {
         enableLocalStorage();
         clearInterval(intervalId);
     }
-
-    const respPanel = document.getElementById("resp_Panel");
-    if (respPanel) {
-        enableLocalStorageWithClass('.resp_button');
-        enableLocalStorageForIds(); // ★ NOWE
-    }
 }
 
-// ★ NOWE: zapis kliknięć z klas
+// ★ Zapis klikniecia przycisku z klasami (gh_button itp)
 function handleButtonClickByClass(event) {
-    const buttonClass = event.currentTarget.className.replace(/\s+/g, '.');
-    const entry = `class:${buttonClass}`;
+    const target = event.currentTarget;
+    const classList = Array.from(target.classList);
 
+    // Znajdz pierwsza pasujaca klase
+    const matched = classList.find(c => TRACKED_BUTTON_CLASSES.includes(c));
+    if (!matched) return;
+
+    const entry = `btn:${matched}`;
     let savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
 
     if (!savedClicks.includes(entry)) {
         savedClicks.push(entry);
         localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
-        console.log(`Click saved [${savedClicks.length}] CLASS:`, buttonClass);
+        console.log(`Click saved [${savedClicks.length}] BTN:`, matched);
     }
 }
 
-// ★ NOWE: zapis kliknięć z ID
-function handleButtonClickById(event) {
-    const elementId = event.currentTarget.id;
-    if (!elementId) return;
+// ★ Zapis klikniecia resp_button — wykrywa ktora klase resp_bh* ma
+function handleRespButtonClick(event) {
+    const target = event.currentTarget;
+    const classList = Array.from(target.classList);
 
-    const entry = `id:${elementId}`;
+    // Znajdz pasujaca klase resp_bh*/on/off
+    const matched = classList.find(c => TRACKED_RESP_CLASSES.includes(c));
+    if (!matched) return;
 
+    const entry = `resp:${matched}`;
     let savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
 
     if (!savedClicks.includes(entry)) {
         savedClicks.push(entry);
         localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
-        console.log(`Click saved [${savedClicks.length}] ID:`, elementId);
+        console.log(`Click saved [${savedClicks.length}] RESP:`, matched);
     }
-}
-
-function enableLocalStorageWithClass(className) {
-    const divs = document.querySelectorAll(className);
-    divs.forEach(div => {
-        div.removeEventListener('click', handleButtonClickByClass);
-        div.addEventListener('click', handleButtonClickByClass);
-    });
 }
 
 function enableLocalStorage() {
-    const buttonClasses = [
-        '.gh_button',
-        '.pvp_button',
-        '.lpvm_button',
-        '.res_button',
-        '.code_button',
-        '.resp_button',
-        '.qlink.manage_auto_abyss',
-        '.qlink.manage_auto_arena',
-        '.qlink.manage_autoExpeditions'
-    ];
-
-    buttonClasses.forEach(className => {
-        const buttons = document.querySelectorAll(className);
+    // Standardowe przyciski
+    TRACKED_BUTTON_CLASSES.forEach(cls => {
+        const buttons = document.querySelectorAll(`.${cls}`);
         buttons.forEach(button => {
             button.removeEventListener('click', handleButtonClickByClass);
             button.addEventListener('click', handleButtonClickByClass);
         });
     });
 
-    // ★ NOWE: dodatkowo śledź ID
-    enableLocalStorageForIds();
+    // Resp buttons
+    enableRespButtonListeners();
 }
 
-// ★ NOWE: rejestracja listenerow dla ID
-function enableLocalStorageForIds() {
-    TRACKED_IDS.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.removeEventListener('click', handleButtonClickById);
-            el.addEventListener('click', handleButtonClickById);
-        }
+// ★ Rejestracja listenerow na wszystkie resp_button z odpowiednia klasa
+function enableRespButtonListeners() {
+    TRACKED_RESP_CLASSES.forEach(cls => {
+        const buttons = document.querySelectorAll(`.resp_button.${cls}`);
+        buttons.forEach(btn => {
+            btn.removeEventListener('click', handleRespButtonClick);
+            btn.addEventListener('click', handleRespButtonClick);
+        });
     });
 }
 
@@ -222,44 +213,35 @@ document.body.appendChild(startStopButton);
 
 setTimeout(runCodeWithDelay, 1000);
 
-// ★ NOWE: obserwator DOM — gdy pojawia się resp_bh1..18 / resp_on / resp_off,
-// automatycznie podpina im listener (potrzebne po pojawieniu się resp_Panel)
-const idObserver = new MutationObserver(() => {
-    if (recordingEnabled || !replayAlreadyRan) {
-        enableLocalStorageForIds();
-    }
+// ★ MutationObserver — gdy panelBlogo lub resp_buttons sa dodawane do DOM,
+// automatycznie podpinaj im listenery
+const domObserver = new MutationObserver(() => {
+    enableRespButtonListeners();
 });
 
-idObserver.observe(document.body, {
+domObserver.observe(document.body, {
     childList: true,
     subtree: true
 });
+
+// ★ Dodatkowy interval — co 2s sprawdza czy sa nowe resp_button
+setInterval(() => {
+    enableRespButtonListeners();
+}, 2000);
 
 // ============================================================
 // ★ SEKWENCJA:
 //   T = 40s  →  GAME.page_switch('game_map')
 //   T = 43s  →  klawisz "0"
-//   T = 45s  →  klik .qlink.load_afo
-//   T = 50s  →  replay zapisanych klikow (co 2s)
+//   T = 45s  →  klik .qlink.load_afo  (otwiera panel BŁOGO)
+//   T = 55s  →  replay zapisanych klikow (panel sie musi zaladowac)
 // ============================================================
-
-// Obsluga obu formatow — tablica i stary obiekt
-let savedClicksRaw = JSON.parse(localStorage.getItem('savedClicks'));
-let hasSavedClicks = false;
-
-if (Array.isArray(savedClicksRaw)) {
-    hasSavedClicks = savedClicksRaw.length > 0;
-} else if (savedClicksRaw && typeof savedClicksRaw === 'object') {
-    const converted = Object.keys(savedClicksRaw).map(k => `class:${k}`);
-    if (converted.length > 0) {
-        localStorage.setItem('savedClicks', JSON.stringify(converted));
-        hasSavedClicks = true;
-        console.log('Skonwertowano stary format na tablice:', converted);
-    }
-}
+const savedClicksRaw = JSON.parse(localStorage.getItem('savedClicks'));
+const hasSavedClicks = Array.isArray(savedClicksRaw) && savedClicksRaw.length > 0;
 
 if (hasSavedClicks) {
-    console.log('Znaleziono zapisane kliknięcia. Start sekwencji za 40s...');
+    console.log('Znaleziono zapisane kliknięcia:', savedClicksRaw);
+    console.log('Start sekwencji za 40s...');
 
     // ──────── KROK 1 (40s): przełączenie na game_map ────────
     setTimeout(() => {
@@ -270,7 +252,6 @@ if (hasSavedClicks) {
     // ──────── KROK 2 (43s): naciśnięcie klawisza "0" ────────
     setTimeout(() => {
         console.log('[2/4] Symuluje nacisniecie klawisza 0');
-
         const keyboardEvent = new KeyboardEvent('keydown', {
             key: '0',
             code: 'Digit0',
@@ -282,7 +263,7 @@ if (hasSavedClicks) {
         document.dispatchEvent(keyboardEvent);
     }, 43000);
 
-    // ──────── KROK 3 (45s): klik w .qlink.load_afo ────────
+    // ──────── KROK 3 (45s): klik w .qlink.load_afo (otwiera panel BŁOGO) ────────
     setTimeout(() => {
         console.log('[3/4] Klikam .qlink.load_afo');
         const elementToClick = document.querySelector('.qlink.load_afo');
@@ -293,12 +274,12 @@ if (hasSavedClicks) {
         }
     }, 45000);
 
-    // ──────── KROK 4 (50s): replay zapisanych klikow ────────
+    // ──────── KROK 4 (55s): replay — czeka 10s na utworzenie panelu BŁOGO ────────
     setTimeout(() => {
         console.log('[4/4] Odtwarzanie zapisanych klikniec...');
         enableLocalStorage();
         replaySavedClicks();
-    }, 50000);
+    }, 55000);
 
 } else {
     console.log('Nie znaleziono zapisanych kliknięć w localStorage.');
