@@ -1,5 +1,5 @@
 function runCodeWithDelay() {
-    const logoutButton   = document.querySelector('button[data-option="logout"]');
+    const logoutButton    = document.querySelector('button[data-option="logout"]');
     const startStopButton = document.getElementById('startStopButton');
     startStopButton.style.display = 'none';
 
@@ -46,7 +46,7 @@ function replaySavedClicks() {
                         localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
                     });
                 }
-            }, index * 2000); // ★ 2 sek między każdym kliknięciem
+            }, index * 2000);
         });
     } else {
         console.log('[REPLAY] Brak zapisanych kliknięć lub zatrzymano.');
@@ -65,7 +65,6 @@ function startRecording() {
 function stopRecording() {
     clearInterval(intervalId);
     localStorage.removeItem('savedClicks');
-    // ★ USUNIETO: localStorage.removeItem('selectedSpawners')
     console.log('[REC] Stop nagrywania, dane wyczyszczone.');
     recordingEnabled = false;
     localStorage.setItem('recordingEnabled', false);
@@ -128,15 +127,15 @@ startStopButton.textContent = recordingEnabled ? 'Off' : 'On';
 startStopButton.id          = 'startStopButton';
 
 Object.assign(startStopButton.style, {
-    position:    'fixed',
-    top:         '22px',
-    right:       '5px',
-    background:  '#333',
-    borderRadius:'5px',
-    borderWidth: '5px 6px 5px 6px',
-    display:     'block',
-    color:       'gold',
-    borderColor: 'rgba(0,0,0,0.9)'
+    position:     'fixed',
+    top:          '22px',
+    right:        '5px',
+    background:   '#333',
+    borderRadius: '5px',
+    borderWidth:  '5px 6px 5px 6px',
+    display:      'block',
+    color:        'gold',
+    borderColor:  'rgba(0,0,0,0.9)'
 });
 
 startStopButton.addEventListener('click', () => {
@@ -149,52 +148,53 @@ startStopButton.addEventListener('click', () => {
 });
 
 document.body.appendChild(startStopButton);
-
 setTimeout(() => runCodeWithDelay(), 1000);
 
 // ====== GŁÓWNA SEKWENCJA ======
 const savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || {};
 
 if (Object.keys(savedClicks).length > 0) {
-    console.log('[SEQ] Znaleziono zapisane kliknięcia — startuję sekwencję.');
+    console.log('[SEQ] Znaleziono zapisane kliknięcia — czekam 40s...');
 
-    // ★ t = 0s — Przełącz mapę
-    console.log('[SEQ] t=0s → page_switch game_map');
-    GAME.page_switch('game_map');
-
-    // ★ t = 2s — Naciśnij klawisz '0'
+    // ★ t = 40s — page_switch
     setTimeout(() => {
-        console.log('[SEQ] t=2s → Klawisz 0');
-        document.dispatchEvent(new KeyboardEvent('keydown', {
-            key:       '0',
-            keyCode:   48,
-            bubbles:   true,
-            cancelable:true
-        }));
-    }, 2000);
+        console.log('[SEQ] t=40s → page_switch game_map');
+        GAME.page_switch('game_map');
+    }, 40000);
 
-    // ★ t = 4s — Kliknij .qlink.load_afo
+    // ★ t = 43s — Klawisz '0' (+3s po page_switch)
+    setTimeout(() => {
+        console.log('[SEQ] t=43s → Klawisz 0');
+        document.dispatchEvent(new KeyboardEvent('keydown', {
+            key:        '0',
+            keyCode:    48,
+            bubbles:    true,
+            cancelable: true
+        }));
+    }, 43000);
+
+    // ★ t = 45s — Kliknij .qlink.load_afo (+2s)
     setTimeout(() => {
         const el = document.querySelector('.qlink.load_afo');
         if (el) {
-            console.log('[SEQ] t=4s → Klikam .qlink.load_afo');
+            console.log('[SEQ] t=45s → Klikam .qlink.load_afo');
             el.click();
         } else {
-            console.warn('[SEQ] t=4s → Nie znaleziono .qlink.load_afo');
+            console.warn('[SEQ] t=45s → Nie znaleziono .qlink.load_afo');
         }
-    }, 4000);
+    }, 45000);
 
-    // ★ t = 9s (4s + 5s przerwy) — replaySavedClicks
+    // ★ t = 50s — replaySavedClicks (+5s)
     setTimeout(() => {
-        console.log('[SEQ] t=9s → replaySavedClicks');
+        console.log('[SEQ] t=50s → replaySavedClicks');
         replaySavedClicks();
-    }, 9000);
+    }, 50000);
 
-    // ★ t = 11s — checkMainPanel
+    // ★ t = 52s — checkMainPanel (+2s)
     setTimeout(() => {
-        console.log('[SEQ] t=11s → checkMainPanel');
+        console.log('[SEQ] t=52s → checkMainPanel');
         checkMainPanel();
-    }, 11000);
+    }, 52000);
 
 } else {
     console.log('[SEQ] Brak zapisanych kliknięć w localStorage.');
