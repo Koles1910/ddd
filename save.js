@@ -273,7 +273,7 @@ if (Object.keys(savedClicks).length > 0 || savedResp.length > 0) {
     setTimeout(() => {
         console.log('[1/4] GAME.page_switch(\'game_map\')');
         GAME.page_switch('game_map');
-    }, 40000);
+    }, 50000);
 
     // T = 43s → klawisz '0'
     setTimeout(() => {
@@ -282,7 +282,7 @@ if (Object.keys(savedClicks).length > 0 || savedResp.length > 0) {
             key: '0', code: 'Digit0', keyCode: 48,
             which: 48, bubbles: true, cancelable: true
         }));
-    }, 43000);
+    }, 53000);
 
     // T = 45s → .qlink.load_afo
     setTimeout(() => {
@@ -290,14 +290,14 @@ if (Object.keys(savedClicks).length > 0 || savedResp.length > 0) {
         const el = document.querySelector('.qlink.load_afo');
         if (el) el.click();
         else console.warn('Nie znaleziono .qlink.load_afo');
-    }, 45000);
+    }, 55000);
 
     // T = 50s → replay
     setTimeout(() => {
         console.log('[4/4] Odtwarzanie zapisanych klikniec...');
         enableLocalStorage();
         replaySavedClicks();
-    }, 50000);
+    }, 60000);
 
 } else {
     console.log('Nie znaleziono zapisanych kliknięć w localStorage.');
