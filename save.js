@@ -30,7 +30,7 @@ let recordingEnabled = JSON.parse(localStorage.getItem('recordingEnabled')) || f
 let stopReplay      = false;
 let replayAlreadyRan = false;
 
-// ★ ZWYKŁE PRZYCISKI Z KLAS — selektory do wyszukania + nazwa do zapisu
+// ★ ZWYKŁE PRZYCISKI (poza panelem BŁOGO)
 const TRACKED_BUTTON_CLASSES = [
     { selector: '.gh_button',                          key: 'gh_button' },
     { selector: '.pvp_button',                         key: 'pvp_button' },
@@ -52,7 +52,33 @@ const TRACKED_RESP_CLASSES = [
     "resp_on",   "resp_off"
 ];
 
-// ====== ODTWARZANIE KLIKNIĘĆ ======
+// ====== POMOCNICZE — klik pojedynczego wpisu ======
+function clickEntry(entry, currentNum, totalNum) {
+    if (stopReplay) return;
+
+    const [type, value] = entry.split(':');
+    let element = null;
+
+    if (type === 'resp') {
+        element = document.querySelector(`.resp_button.${value}`);
+    } else if (type === 'btn') {
+        const def = TRACKED_BUTTON_CLASSES.find(b => b.key === value);
+        element = def ? document.querySelector(def.selector) : document.querySelector(`.${value}`);
+    }
+
+    if (element) {
+        console.log(`[REPLAY ${currentNum}/${totalNum}] Klikam ${type}:`, value);
+
+        try { element.click(); } catch (e) {}
+        if (typeof $ !== 'undefined') {
+            try { $(element).trigger('click'); } catch (e) {}
+        }
+    } else {
+        console.warn(`[REPLAY ${currentNum}/${totalNum}] Brak elementu: ${entry}`);
+    }
+}
+
+// ====== ODTWARZANIE KLIKNIĘĆ — najpierw setup, potem 2 fazy ======
 function replaySavedClicks() {
 
     if (replayAlreadyRan) {
@@ -60,8 +86,6 @@ function replaySavedClicks() {
         return;
     }
     replayAlreadyRan = true;
-
-    console.log('Attempting to replay saved clicks...');
 
     const savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
 
@@ -72,39 +96,73 @@ function replaySavedClicks() {
 
     console.log('Found saved clicks (w kolejnosci):', savedClicks);
 
-    savedClicks.forEach((entry, index) => {
-        // ★ Pierwszy klik od razu (po 10s opoznieniu w setTimeout glownej sekwencji)
-        // Kolejne kliki co 3s
-        const delay = index * 3000;
+    // ★ Podzial na fazy
+    const btnClicks  = savedClicks.filter(e => e.startsWith('btn:'));
+    const respClicks = savedClicks.filter(e => e.startsWith('resp:'));
 
-        setTimeout(() => {
-            if (stopReplay) return;
+    console.log(`Faza 1 (btn): ${btnClicks.length} klikow`);
+    console.log(`Faza 2 (resp): ${respClicks.length} klikow`);
 
-            // Format: "resp:resp_bh1" lub "btn:gh_button"
-            const [type, value] = entry.split(':');
+    let timeline = 0;
+    const total = savedClicks.length;
+    let clickNum = 0;
 
-            let element = null;
+    // ────────── KROK A: GAME.page_switch('game_map') ──────────
+    setTimeout(() => {
+        console.log('[SEQ A] GAME.page_switch(\'game_map\')');
+        try {
+            GAME.page_switch('game_map');
+        } catch (e) {
+            console.warn('GAME.page_switch nieudane:', e);
+        }
+    }, timeline);
+    timeline += 3000;
 
-            if (type === 'resp') {
-                element = document.querySelector(`.resp_button.${value}`);
-            } else if (type === 'btn') {
-                // Znajdz w liscie po key
-                const def = TRACKED_BUTTON_CLASSES.find(b => b.key === value);
-                if (def) {
-                    element = document.querySelector(def.selector);
-                } else {
-                    element = document.querySelector(`.${value}`);
-                }
-            }
+    // ────────── KROK B: klawisz "0" ──────────
+    setTimeout(() => {
+        console.log('[SEQ B] Klawisz 0');
+        const ke = new KeyboardEvent('keydown', {
+            key: '0',
+            code: 'Digit0',
+            keyCode: 48,
+            which: 48,
+            bubbles: true,
+            cancelable: true
+        });
+        document.dispatchEvent(ke);
+    }, timeline);
+    timeline += 2000;
 
-            if (element) {
-                console.log(`[REPLAY ${index + 1}/${savedClicks.length}] Klikam ${type}:`, value);
-                element.click();
-            } else {
-                console.warn(`[REPLAY ${index + 1}] Brak elementu: ${entry}`);
-            }
-        }, delay);
+    // ────────── KROK C: klik .qlink.load_afo ──────────
+    setTimeout(() => {
+        console.log('[SEQ C] Klik .qlink.load_afo');
+        const el = document.querySelector('.qlink.load_afo');
+        if (el) {
+            el.click();
+            if (typeof $ !== 'undefined') $(el).trigger('click');
+        } else {
+            console.warn('Brak .qlink.load_afo');
+        }
+    }, timeline);
+    timeline += 10000;  // ★ 10s na otwarcie panelu BŁOGO
+
+    // ────────── FAZA 1: btn (gh, pvp, manage_auto_* itp) co 3s ──────────
+    btnClicks.forEach(entry => {
+        clickNum++;
+        const num = clickNum;
+        setTimeout(() => clickEntry(entry, num, total), timeline);
+        timeline += 3000;
     });
+
+    // ────────── FAZA 2: resp_bh*/on/off co 3s ──────────
+    respClicks.forEach(entry => {
+        clickNum++;
+        const num = clickNum;
+        setTimeout(() => clickEntry(entry, num, total), timeline);
+        timeline += 3000;
+    });
+
+    console.log(`[SEQ] Calkowity czas sekwencji: ${timeline / 1000}s`);
 }
 
 // ====== START / STOP ======
@@ -143,9 +201,7 @@ function handleButtonClickByClass(event) {
     const target = event.currentTarget;
     const classList = Array.from(target.classList);
 
-    // Znajdz definicje z TRACKED_BUTTON_CLASSES
     const matched = TRACKED_BUTTON_CLASSES.find(def => {
-        // Selektor np ".qlink.manage_auto_abyss" -> klasy: qlink, manage_auto_abyss
         const requiredClasses = def.selector.split('.').filter(c => c);
         return requiredClasses.every(c => classList.includes(c));
     });
@@ -162,7 +218,7 @@ function handleButtonClickByClass(event) {
     }
 }
 
-// ★ Zapis klikniecia resp_button (resp_bh*/on/off)
+// ★ Zapis klikniecia resp_button
 function handleRespButtonClick(event) {
     const target = event.currentTarget;
     const classList = Array.from(target.classList);
@@ -180,7 +236,6 @@ function handleRespButtonClick(event) {
     }
 }
 
-// ★ Rejestracja listenerow na resp_button (resp_bh*/on/off)
 function enableRespButtonListeners() {
     TRACKED_RESP_CLASSES.forEach(cls => {
         const buttons = document.querySelectorAll(`.resp_button.${cls}`);
@@ -192,7 +247,6 @@ function enableRespButtonListeners() {
 }
 
 function enableLocalStorage() {
-    // Zwykłe przyciski
     TRACKED_BUTTON_CLASSES.forEach(def => {
         const buttons = document.querySelectorAll(def.selector);
         buttons.forEach(button => {
@@ -201,7 +255,6 @@ function enableLocalStorage() {
         });
     });
 
-    // Resp buttons
     enableRespButtonListeners();
 }
 
@@ -232,10 +285,10 @@ document.body.appendChild(startStopButton);
 
 setTimeout(runCodeWithDelay, 1000);
 
-// ★ MutationObserver — automatycznie podpinaj listenery do nowych elementow
+// ★ MutationObserver
 const domObserver = new MutationObserver(() => {
     if (recordingEnabled || !replayAlreadyRan) {
-        enableRespButtonListeners();
+        enableLocalStorage();
     }
 });
 
@@ -244,32 +297,22 @@ domObserver.observe(document.body, {
     subtree: true
 });
 
-// ★ Dodatkowy interval — sprawdza nowo dodane resp_button
 setInterval(() => {
     if (recordingEnabled || !replayAlreadyRan) {
-        enableRespButtonListeners();
+        enableLocalStorage();
     }
 }, 2000);
 
 // ============================================================
-// ★ SEKWENCJA:
-//   T = 40s  →  GAME.page_switch('game_map')
-//   T = 43s  →  klawisz "0"
-//   T = 45s  →  klik .qlink.load_afo
-//   T = 55s  →  pierwszy replay (10s po klikniciu load_afo)
-//   T = 58s  →  drugi (+3s)
-//   T = 61s  →  trzeci (+3s)
-//   ...
+// ★ SEKWENCJA — start 40s po odswiezeniu
 // ============================================================
 
-// Obsluga obu formatow — tablica i stary obiekt
 let savedClicksRaw = JSON.parse(localStorage.getItem('savedClicks'));
 let hasSavedClicks = false;
 
 if (Array.isArray(savedClicksRaw)) {
     hasSavedClicks = savedClicksRaw.length > 0;
 } else if (savedClicksRaw && typeof savedClicksRaw === 'object') {
-    // Konwersja starego formatu obiektu na tablice
     const converted = Object.keys(savedClicksRaw).map(k => {
         const cleanClass = k.replace(/\./g, ' ').trim().split(' ').pop();
 
@@ -288,51 +331,18 @@ if (Array.isArray(savedClicksRaw)) {
     if (converted.length > 0) {
         localStorage.setItem('savedClicks', JSON.stringify(converted));
         hasSavedClicks = true;
-        console.log('Skonwertowano stary format na tablice:', converted);
+        console.log('Skonwertowano stary format:', converted);
     }
 }
 
 if (hasSavedClicks) {
-    console.log('Znaleziono zapisane kliknięcia. Start sekwencji za 40s...');
+    console.log('Znaleziono zapisane kliknięcia. Start za 40s...');
 
-    // ──────── KROK 1 (40s): przełączenie na game_map ────────
     setTimeout(() => {
-        console.log('[1/4] GAME.page_switch(\'game_map\')');
-        GAME.page_switch('game_map');
-    }, 40000);
-
-    // ──────── KROK 2 (43s): naciśnięcie klawisza "0" ────────
-    setTimeout(() => {
-        console.log('[2/4] Symuluje nacisniecie klawisza 0');
-
-        const keyboardEvent = new KeyboardEvent('keydown', {
-            key: '0',
-            code: 'Digit0',
-            keyCode: 48,
-            which: 48,
-            bubbles: true,
-            cancelable: true
-        });
-        document.dispatchEvent(keyboardEvent);
-    }, 43000);
-
-    // ──────── KROK 3 (45s): klik w .qlink.load_afo ────────
-    setTimeout(() => {
-        console.log('[3/4] Klikam .qlink.load_afo');
-        const elementToClick = document.querySelector('.qlink.load_afo');
-        if (elementToClick) {
-            elementToClick.click();
-        } else {
-            console.warn('Nie znaleziono .qlink.load_afo');
-        }
-    }, 45000);
-
-    // ──────── KROK 4 (55s): replay — 10s po klikniciu load_afo ────────
-    setTimeout(() => {
-        console.log('[4/4] Odtwarzanie zapisanych klikniec (co 3s)...');
+        console.log('[REPLAY] Start sekwencji...');
         enableLocalStorage();
         replaySavedClicks();
-    }, 55000);
+    }, 40000);
 
 } else {
     console.log('Nie znaleziono zapisanych kliknięć w localStorage.');
