@@ -25,59 +25,89 @@ function runCodeWithDelay() {
 
 let intervalId;
 let recordingEnabled = JSON.parse(localStorage.getItem('recordingEnabled')) || false;
-let stopReplay = false;
+let stopReplay       = false;
+
+// ★ FIX — flaga żeby replay nie odpalił się dwa razy
+let replayDone = false;
 
 // ====== REPLAY ======
 function replaySavedClicks() {
+
+    // ★ FIX — jeśli już replay był, nie rób ponownie
+    if (replayDone) {
+        console.log('[REPLAY] Już wykonano — pomijam.');
+        return;
+    }
+    replayDone = true;
+
     console.log('[REPLAY] Start...');
     const savedClicks  = JSON.parse(localStorage.getItem('savedClicks')) || {};
     const clickClasses = Object.keys(savedClicks);
 
-    if (clickClasses.length > 0 && !stopReplay) {
-        console.log('[REPLAY] Znalezione klasy:', clickClasses);
-        clickClasses.forEach((buttonClass, index) => {
-            setTimeout(() => {
-                if (!stopReplay) {
-                    const buttons = document.querySelectorAll(`.${buttonClass}`);
-                    buttons.forEach(button => {
-                        console.log('[REPLAY] Klikam:', buttonClass);
-                        button.click();
-                        savedClicks[buttonClass] = { clicked: true };
-                        localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
-                    });
-                }
-            }, index * 2000);
-        });
-    } else {
+    if (clickClasses.length === 0 || stopReplay) {
         console.log('[REPLAY] Brak zapisanych kliknięć lub zatrzymano.');
+        return;
     }
+
+    console.log('[REPLAY] Znalezione klasy:', clickClasses);
+
+    clickClasses.forEach((buttonClass, index) => {
+        setTimeout(() => {
+            if (stopReplay) return;
+
+            // ★ FIX — sprawdź czy już kliknięty
+            const freshClicks = JSON.parse(localStorage.getItem('savedClicks')) || {};
+            if (freshClicks[buttonClass] && freshClicks[buttonClass].clicked) {
+                console.log('[REPLAY] Już kliknięty — pomijam:', buttonClass);
+                return;
+            }
+
+            const buttons = document.querySelectorAll(`.${buttonClass}`);
+            if (buttons.length === 0) {
+                console.warn('[REPLAY] Nie znaleziono przycisku:', buttonClass);
+                return;
+            }
+
+            // ★ FIX — kliknij tylko PIERWSZY znaleziony przycisk
+            const button = buttons[0];
+            console.log('[REPLAY] Klikam:', buttonClass);
+            button.click();
+
+            // Zapisz że kliknięty
+            freshClicks[buttonClass] = { clicked: true };
+            localStorage.setItem('savedClicks', JSON.stringify(freshClicks));
+
+        }, index * 2000);
+    });
 }
 
 // ====== NAGRYWANIE ======
 function startRecording() {
     enableLocalStorage();
-    intervalId = setInterval(checkMainPanel, 1000);
-    console.log('[REC] Start nagrywania.');
+    intervalId   = setInterval(checkMainPanel, 1000);
     recordingEnabled = true;
     localStorage.setItem('recordingEnabled', true);
+    console.log('[REC] Start nagrywania.');
 }
 
 function stopRecording() {
     clearInterval(intervalId);
     localStorage.removeItem('savedClicks');
-    console.log('[REC] Stop nagrywania, dane wyczyszczone.');
     recordingEnabled = false;
     localStorage.setItem('recordingEnabled', false);
     stopReplay = true;
+    console.log('[REC] Stop nagrywania, dane wyczyszczone.');
 }
 
 // ====== PANEL CHECK ======
+// ★ FIX — checkMainPanel NIE wywołuje replaySavedClicks
+// żeby uniknąć podwójnego replay
 function checkMainPanel() {
     const mainPanel = document.getElementById('main_Panel');
     if (mainPanel) {
         enableLocalStorage();
         clearInterval(intervalId);
-        replaySavedClicks();
+        console.log('[CHECK] main_Panel znaleziony — rejestruję przyciski.');
     }
     const respPanel = document.getElementById('resp_Panel');
     if (respPanel) {
@@ -156,13 +186,13 @@ const savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || {};
 if (Object.keys(savedClicks).length > 0) {
     console.log('[SEQ] Znaleziono zapisane kliknięcia — czekam 40s...');
 
-    // ★ t = 40s — page_switch
+    // t = 40s — page_switch
     setTimeout(() => {
         console.log('[SEQ] t=40s → page_switch game_map');
         GAME.page_switch('game_map');
     }, 40000);
 
-    // ★ t = 43s — Klawisz '0' (+3s po page_switch)
+    // t = 43s — Klawisz '0' (+3s)
     setTimeout(() => {
         console.log('[SEQ] t=43s → Klawisz 0');
         document.dispatchEvent(new KeyboardEvent('keydown', {
@@ -173,7 +203,7 @@ if (Object.keys(savedClicks).length > 0) {
         }));
     }, 43000);
 
-    // ★ t = 45s — Kliknij .qlink.load_afo (+2s)
+    // t = 45s — .qlink.load_afo (+2s)
     setTimeout(() => {
         const el = document.querySelector('.qlink.load_afo');
         if (el) {
@@ -184,13 +214,15 @@ if (Object.keys(savedClicks).length > 0) {
         }
     }, 45000);
 
-    // ★ t = 50s — replaySavedClicks (+5s)
+    // t = 50s — replaySavedClicks (+5s)
+    // ★ FIX — tylko JEDNO wywołanie replay
     setTimeout(() => {
         console.log('[SEQ] t=50s → replaySavedClicks');
         replaySavedClicks();
     }, 50000);
 
-    // ★ t = 52s — checkMainPanel (+2s)
+    // t = 52s — checkMainPanel (+2s)
+    // ★ FIX — checkMainPanel już NIE wywołuje replay
     setTimeout(() => {
         console.log('[SEQ] t=52s → checkMainPanel');
         checkMainPanel();
