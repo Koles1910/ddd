@@ -28,14 +28,11 @@ function runCodeWithDelay() {
 let intervalId;
 let recordingEnabled = JSON.parse(localStorage.getItem('recordingEnabled')) || false;
 let stopReplay      = false;
-
-// ★ NOWE: flaga zabezpieczająca przed wielokrotnym replay
 let replayAlreadyRan = false;
 
 // ====== ODTWARZANIE KLIKNIĘĆ ======
 function replaySavedClicks() {
 
-    // ★ Jeśli już raz odtworzyliśmy — nie powtarzaj
     if (replayAlreadyRan) {
         console.log('Replay juz wykonany — pomijam.');
         return;
@@ -43,30 +40,28 @@ function replaySavedClicks() {
     replayAlreadyRan = true;
 
     console.log('Attempting to replay saved clicks...');
-    const savedClicks  = JSON.parse(localStorage.getItem('savedClicks')) || {};
-    const clickClasses = Object.keys(savedClicks);
 
-    if (clickClasses.length > 0 && !stopReplay) {
-        console.log('Found saved clicks:', clickClasses);
+    // ★ TABLICA — zachowuje kolejność klikania
+    const savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
 
-        clickClasses.forEach((buttonClass, index) => {
-
-            // ★ Większy odstęp między klikami — 2000ms zamiast 800
-            setTimeout(() => {
-                if (!stopReplay) {
-                    const buttons = document.querySelectorAll(`.${buttonClass}`);
-                    buttons.forEach(button => {
-                        console.log('Clicking button:', buttonClass);
-                        button.click();
-                        savedClicks[buttonClass] = { clicked: true };
-                        localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
-                    });
-                }
-            }, index * 2000);
-        });
-    } else {
-        console.log('No saved clicks found in local storage or stopped replaying.');
+    if (savedClicks.length === 0 || stopReplay) {
+        console.log('No saved clicks or stopped.');
+        return;
     }
+
+    console.log('Found saved clicks (w kolejnosci):', savedClicks);
+
+    savedClicks.forEach((buttonClass, index) => {
+        setTimeout(() => {
+            if (stopReplay) return;
+
+            const buttons = document.querySelectorAll(`.${buttonClass}`);
+            buttons.forEach(button => {
+                console.log(`[REPLAY ${index + 1}/${savedClicks.length}] Klikam: ${buttonClass}`);
+                button.click();
+            });
+        }, index * 2000);
+    });
 }
 
 // ====== START / STOP ======
@@ -87,13 +82,11 @@ function stopRecording() {
     stopReplay = true;
 }
 
-// ★ POPRAWIONE: bez automatycznego replay
 function checkMainPanel() {
     const mainPanel = document.getElementById("main_Panel");
     if (mainPanel) {
         enableLocalStorage();
         clearInterval(intervalId);
-        // ★ USUNIĘTO replaySavedClicks() stąd
     }
 
     const respPanel = document.getElementById("resp_Panel");
@@ -102,20 +95,27 @@ function checkMainPanel() {
     }
 }
 
+// ★ POPRAWIONE — dodaje do TABLICY w kolejności klikania
 function handleButtonClick(event) {
     const buttonClass = event.target.className.replace(/\s+/g, '.');
-    let savedClicks   = JSON.parse(localStorage.getItem('savedClicks')) || {};
 
-    if (!savedClicks[buttonClass]) {
-        savedClicks[buttonClass] = { clicked: false };
+    // Wczytaj jako tablice
+    let savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || [];
+
+    // Sprawdz czy juz jest w tablicy (zeby nie duplikowac)
+    if (!savedClicks.includes(buttonClass)) {
+        savedClicks.push(buttonClass);
         localStorage.setItem('savedClicks', JSON.stringify(savedClicks));
-        console.log('Click saved:', buttonClass);
+        console.log(`Click saved [${savedClicks.length}]:`, buttonClass);
     }
 }
 
 function enableLocalStorageWithClass(className) {
     const divs = document.querySelectorAll(className);
-    divs.forEach(div => div.addEventListener('click', handleButtonClick));
+    divs.forEach(div => {
+        div.removeEventListener('click', handleButtonClick);
+        div.addEventListener('click', handleButtonClick);
+    });
 }
 
 function enableLocalStorage() {
@@ -133,7 +133,10 @@ function enableLocalStorage() {
 
     buttonClasses.forEach(className => {
         const buttons = document.querySelectorAll(className);
-        buttons.forEach(button => button.addEventListener('click', handleButtonClick));
+        buttons.forEach(button => {
+            button.removeEventListener('click', handleButtonClick);
+            button.addEventListener('click', handleButtonClick);
+        });
     });
 }
 
@@ -164,8 +167,6 @@ document.body.appendChild(startStopButton);
 
 setTimeout(runCodeWithDelay, 1000);
 
-// ★ USUNIĘTO checkMainPanel() z początku — zostawione tylko w intervalu nagrywania
-
 // ============================================================
 // ★ SEKWENCJA:
 //   T = 40s  →  GAME.page_switch('game_map')
@@ -173,9 +174,24 @@ setTimeout(runCodeWithDelay, 1000);
 //   T = 45s  →  klik .qlink.load_afo
 //   T = 50s  →  replay zapisanych klikow (co 2s)
 // ============================================================
-const savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || {};
 
-if (Object.keys(savedClicks).length > 0) {
+// ★ Obsluga obu formatow — tablica i stary obiekt
+let savedClicksRaw = JSON.parse(localStorage.getItem('savedClicks'));
+let hasSavedClicks = false;
+
+if (Array.isArray(savedClicksRaw)) {
+    hasSavedClicks = savedClicksRaw.length > 0;
+} else if (savedClicksRaw && typeof savedClicksRaw === 'object') {
+    // Stary format — konwertuj na tablice
+    const converted = Object.keys(savedClicksRaw);
+    if (converted.length > 0) {
+        localStorage.setItem('savedClicks', JSON.stringify(converted));
+        hasSavedClicks = true;
+        console.log('Skonwertowano stary format na tablice:', converted);
+    }
+}
+
+if (hasSavedClicks) {
     console.log('Znaleziono zapisane kliknięcia. Start sekwencji za 40s...');
 
     // ──────── KROK 1 (40s): przełączenie na game_map ────────
@@ -184,7 +200,7 @@ if (Object.keys(savedClicks).length > 0) {
         GAME.page_switch('game_map');
     }, 40000);
 
-    // ──────── KROK 2 (43s — po 3s): naciśnięcie klawisza "0" ────────
+    // ──────── KROK 2 (43s): naciśnięcie klawisza "0" ────────
     setTimeout(() => {
         console.log('[2/4] Symuluje nacisniecie klawisza 0');
 
@@ -199,7 +215,7 @@ if (Object.keys(savedClicks).length > 0) {
         document.dispatchEvent(keyboardEvent);
     }, 43000);
 
-    // ──────── KROK 3 (45s — po 2s): klik w .qlink.load_afo ────────
+    // ──────── KROK 3 (45s): klik w .qlink.load_afo ────────
     setTimeout(() => {
         console.log('[3/4] Klikam .qlink.load_afo');
         const elementToClick = document.querySelector('.qlink.load_afo');
@@ -210,7 +226,7 @@ if (Object.keys(savedClicks).length > 0) {
         }
     }, 45000);
 
-    // ──────── KROK 4 (50s — po 5s): replay zapisanych klikow ────────
+    // ──────── KROK 4 (50s): replay zapisanych klikow ────────
     setTimeout(() => {
         console.log('[4/4] Odtwarzanie zapisanych klikniec...');
         enableLocalStorage();
