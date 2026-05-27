@@ -236,19 +236,168 @@ function enableLocalStorage() {
     enableRespListeners();
 }
 
-// ====== PRZYCISK ON/OFF (bez zmian) ======
+// ====== PRZYCISK ON/OFF — STYL DRAGON BALL ======
 const startStopButton = document.createElement('button');
-startStopButton.textContent = recordingEnabled ? 'Off' : 'On';
 startStopButton.id = 'startStopButton';
-startStopButton.style.position     = 'fixed';
-startStopButton.style.top          = '22px';
-startStopButton.style.background   = '#333';
-startStopButton.style.borderRadius = '5px';
-startStopButton.style.borderWidth  = '5px 6px 5px 6px';
-startStopButton.style.display      = 'block';
-startStopButton.style.color        = 'gold';
-startStopButton.style.borderColor  = 'rgba(0,0,0,0.9)';
-startStopButton.style.right        = '5px';
+startStopButton.textContent = recordingEnabled ? 'OFF' : 'ON';
+
+// ★ Wstrzykuj style Dragon Ball
+const dbStyle = document.createElement('style');
+dbStyle.textContent = `
+    @import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
+
+    #startStopButton {
+        /* ★ POZYCJA — pod przyciskiem "U" (U jest na top: 62%) */
+        position: fixed;
+        top: calc(62% + 50px);
+        right: 8px;
+        z-index: 9998;
+
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        border: 3px solid #ff6a00;
+
+        font-family: 'Bangers', 'Impact', sans-serif;
+        font-size: 18px;
+        letter-spacing: 1.5px;
+        color: #fff5a0;
+
+        cursor: pointer;
+        outline: none;
+        user-select: none;
+        padding: 0;
+
+        background:
+            radial-gradient(circle at 35% 30%, #ffe066 0%, #ffa500 30%, #ff6a00 70%, #b34700 100%);
+
+        text-shadow:
+            0 0 6px rgba(255, 215, 0, 0.9),
+            0 0 12px rgba(255, 106, 0, 0.7),
+            2px 2px 0 #5a1a00,
+            -1px -1px 0 #000;
+
+        box-shadow:
+            0 0 12px rgba(255, 106, 0, 0.7),
+            0 0 25px rgba(255, 215, 0, 0.4),
+            inset 0 -8px 18px rgba(0, 0, 0, 0.45),
+            inset 0 6px 12px rgba(255, 240, 150, 0.55);
+
+        transition: all 0.25s ease;
+        animation: dbPulse 2.5s ease-in-out infinite;
+    }
+
+    /* Gwiazdki w środku — Smocza Kula */
+    #startStopButton::before {
+        content: '★';
+        position: absolute;
+        top: 12%;
+        left: 16%;
+        font-size: 9px;
+        color: #5a1a00;
+        pointer-events: none;
+    }
+
+    #startStopButton::after {
+        content: '★';
+        position: absolute;
+        bottom: 12%;
+        right: 16%;
+        font-size: 9px;
+        color: #5a1a00;
+        pointer-events: none;
+    }
+
+    /* Pulsowanie Ki */
+    @keyframes dbPulse {
+        0%, 100% {
+            box-shadow:
+                0 0 12px rgba(255, 106, 0, 0.7),
+                0 0 25px rgba(255, 215, 0, 0.4),
+                inset 0 -8px 18px rgba(0, 0, 0, 0.45),
+                inset 0 6px 12px rgba(255, 240, 150, 0.55);
+            transform: scale(1);
+        }
+        50% {
+            box-shadow:
+                0 0 22px rgba(255, 215, 0, 1),
+                0 0 45px rgba(255, 106, 0, 0.7),
+                0 0 70px rgba(255, 50, 0, 0.3),
+                inset 0 -8px 18px rgba(0, 0, 0, 0.45),
+                inset 0 6px 12px rgba(255, 240, 150, 0.75);
+            transform: scale(1.05);
+        }
+    }
+
+    #startStopButton:hover {
+        transform: scale(1.15) rotate(-3deg);
+        border-color: #ffd700;
+        animation: dbPulseHover 0.6s ease-in-out infinite;
+    }
+
+    @keyframes dbPulseHover {
+        0%, 100% {
+            box-shadow:
+                0 0 25px rgba(255, 215, 0, 1),
+                0 0 50px rgba(255, 106, 0, 0.8),
+                0 0 80px rgba(255, 50, 0, 0.5),
+                inset 0 -8px 18px rgba(0, 0, 0, 0.45),
+                inset 0 6px 12px rgba(255, 240, 150, 0.75);
+        }
+        50% {
+            box-shadow:
+                0 0 35px rgba(255, 240, 150, 1),
+                0 0 65px rgba(255, 150, 0, 0.9),
+                0 0 100px rgba(255, 80, 0, 0.7),
+                inset 0 -8px 18px rgba(0, 0, 0, 0.45),
+                inset 0 6px 12px rgba(255, 240, 150, 0.85);
+        }
+    }
+
+    #startStopButton:active {
+        transform: scale(0.92);
+    }
+
+    /* Gdy OFF — czerwone Ki */
+    #startStopButton.db-off {
+        background:
+            radial-gradient(circle at 35% 30%, #ff8866 0%, #ff3300 30%, #cc0000 70%, #660000 100%);
+        border-color: #ff0033;
+        color: #ffdddd;
+
+        text-shadow:
+            0 0 6px rgba(255, 100, 100, 0.9),
+            0 0 12px rgba(255, 0, 0, 0.7),
+            2px 2px 0 #4a0000,
+            -1px -1px 0 #000;
+
+        animation: dbPulseRed 2.5s ease-in-out infinite;
+    }
+
+    @keyframes dbPulseRed {
+        0%, 100% {
+            box-shadow:
+                0 0 12px rgba(255, 50, 50, 0.7),
+                0 0 25px rgba(255, 0, 0, 0.4),
+                inset 0 -8px 18px rgba(0, 0, 0, 0.5),
+                inset 0 6px 12px rgba(255, 150, 150, 0.55);
+        }
+        50% {
+            box-shadow:
+                0 0 22px rgba(255, 100, 100, 1),
+                0 0 45px rgba(255, 0, 0, 0.8),
+                0 0 70px rgba(180, 0, 0, 0.4),
+                inset 0 -8px 18px rgba(0, 0, 0, 0.5),
+                inset 0 6px 12px rgba(255, 150, 150, 0.75);
+        }
+    }
+`;
+document.head.appendChild(dbStyle);
+
+// Ustaw klase poczatkowa
+if (recordingEnabled) {
+    startStopButton.classList.add('db-off');
+}
 
 startStopButton.addEventListener('click', () => {
     if (recordingEnabled) {
@@ -256,11 +405,12 @@ startStopButton.addEventListener('click', () => {
     } else {
         startRecording();
     }
-    startStopButton.textContent = recordingEnabled ? 'Off' : 'On';
+    startStopButton.textContent = recordingEnabled ? 'OFF' : 'ON';
+    startStopButton.classList.toggle('db-off', recordingEnabled);
 });
 
 document.body.appendChild(startStopButton);
-setTimeout(runCodeWithDelay, 1000);
+
 
 // ====== GŁÓWNA SEKWENCJA (bez zmian) ======
 const savedClicks = JSON.parse(localStorage.getItem('savedClicks')) || {};
