@@ -1,6 +1,6 @@
 var checked = false;
 var latency = -1;
-const gitUrl = 'https://github.com/Koles1910/ddd/'
+const gitUrl = 'https://github.com/Koles1910/ddd'
 const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
 if (typeof GAME === 'undefined') { } else {
