@@ -4,13 +4,13 @@
      scr.innerHTML = `const LoadScript = (url, cb) => { fetch(url).then(res => res.json()).then((out) => { cb(out) }).catch(err => { throw err }); }
  
  const links = {
-    "link0":"https://github.com/Koles1910/ddd/test/charactersManager.js",
-    "link1":"https://github.com/Koles1910/ddd/test/ballExp.js",
-    "link2":"https://github.com/Koles1910/ddd/test/ballUpgrade.js",
-    "link3":"https://github.com/Koles1910/ddd/test/ballReset.js",
-    "link4":"https://github.com/Koles1910/ddd/test/ballManager.js",
-    "link5":"https://github.com/Koles1910/ddd/test/script1-2.js",
-    "link6":"https://github.com/Koles1910/ddd/test/ekwipunek.js",
+    "link0":"https://raw.githubusercontent.com/Koles1910/ddd/refs/heads/main/test/charactersManager.js",
+    "link1":"https://raw.githubusercontent.com/Koles1910/ddd/refs/heads/main/test/ballExp.js",
+    "link2":"https://raw.githubusercontent.com/Koles1910/ddd/refs/heads/main/test/ballUpgrade.js",
+    "link3":"https://raw.githubusercontent.com/Koles1910/ddd/refs/heads/main/test/ballReset.js",
+    "link4":"https://raw.githubusercontent.com/Koles1910/ddd/refs/heads/main/test/ballManager.js",
+    "link5":"https://raw.githubusercontent.com/Koles1910/ddd/refs/heads/main/test/script1-2.js",
+    "link6":"https://raw.githubusercontent.com/Koles1910/ddd/refs/heads/main/test/ekwipunek.js",
  };
  
  const fetchPromises = Object.values(links).map(link => {
