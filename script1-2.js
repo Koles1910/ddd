@@ -1829,7 +1829,12 @@ loadRiddles(cb) {
                                 type: 32
                             });
                         } else if (event.key === "4") {
-                            this.bless();
+                            
+							            GAME.socket.emit('ga', {
+                                        a: 50,
+                                        type: 5,
+                                        e: GAME.char_data.empire
+                                    });
                         } else if (event.key === "5") {
                             setTimeout(() => {
                                 GAME.socket.emit('ga', {
@@ -1865,6 +1870,8 @@ loadRiddles(cb) {
                                     set: set
                                 });
                             }
+							 } else if (event.key === "9") {
+                            this.bless();
                         } else if (event.key === "=") {
                             this.createAlternativePilot();
                         } else if (event.key === ",") {
@@ -1873,7 +1880,7 @@ loadRiddles(cb) {
                             this.goToPreviousChar();
                         } else if (event.key === "Tab") {
                             this.goToNextChar();
-                        } else if (event.key === "9" && JQS.qcc.is(":visible")) { }
+                        
                     }
                 });
                 $("body").on("click", ".qlink.load_afo", () => {
