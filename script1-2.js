@@ -1081,8 +1081,13 @@ loadRiddles(cb) {
                     }
                 });
             }
-            
-            
+                                    safeLastmapBack() {
+                if (GAME.fast_locations.includes(GAME.char_data.loc)) {
+                    return GAME.socket.emit('ga', {a:16});
+                }
+                GAME.ask_confirm(19,{a:16});
+            };
+
             wojny2() {
                 var aimp = $("#e_admiral_player").find("[data-option=show_player]").attr("data-char_id");
                 var imp = $("#leader_player").find("[data-option=show_player]").attr("data-char_id");
