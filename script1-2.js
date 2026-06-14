@@ -1,6 +1,6 @@
 var checked = false;
 var latency = -1;
-const gitUrl = 'https://raw.githubusercontent.com/Koles1910/ddd/main/'
+const gitUrl = 'https://raw.githubusercontent.com/Koles1910/ddd/'
 const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
 if (typeof GAME === 'undefined') { } else {
@@ -94,7 +94,8 @@ if (typeof GAME === 'undefined') { } else {
                     padding: 4px;
                 }
                 `);
-                if (this.settings.spawner) GAME.spawner = this.settings.spawner;
+                const savedSpawner = localStorage.getItem('kws_spawner');
+                if (savedSpawner) GAME.spawner = JSON.parse(savedSpawner);
                 $("body").append(`<div id="kws_spawn"> <div class="spawn_header">USTAWIENIA SPAWNU</div> <div id="kws_spawn2">${this.spawnList()}</div> </div>`);
                 this.addToCSS(`.quest_roll1{position:absolute; width:50px; height:50px; background:url('/gfx/layout/dice.png') 0 0; top:-25px; left:25px; cursor:pointer; filter:drop-shadow(0px 0px 10px lime)} .quest_roll2{position:absolute; width:50px; height:50px; background:url('/gfx/layout/dice.png') 0 0; top:-25px; left:75px; cursor:pointer; filter:drop-shadow(0px 0px 10px #00fdff)} .quest_roll3{position:absolute; width:50px; height:50px; background:url('/gfx/layout/dice.png') 0 0; top:-25px; left:125px; cursor:pointer; filter:drop-shadow(0px 0px 10px #ff0000)} .quest_roll:hover{background:url('/gfx/layout/dice.png') 0 -45px;} .quest_roll1:hover{background:url('/gfx/layout/dice.png') 0 -45px;} .quest_roll2:hover{background:url('/gfx/layout/dice.png') 0 -45px;} .quest_roll3:hover{background:url('/gfx/layout/dice.png') 0 -45px;}`);
                 this.addToCSS(`#lastmap_bar { top: 115px !important; }`);
@@ -198,8 +199,6 @@ if (typeof GAME === 'undefined') { } else {
                 GAME.socket.on('gr', (res) => {
                     this.handleSockets(res);
                 });
-                // add instances to fast_locations
-                GAME.fast_locations.push(369, 394, 405, 407, 472, 478, 577, 580, 872);
             }
             isLogged(cb) {
                 let waitForID = setInterval(() => {
@@ -209,13 +208,168 @@ if (typeof GAME === 'undefined') { } else {
                     }
                 }, 200);
             }
-            loadRiddles(cb) {
-                fetch(`${gitUrl}/main/riddles.json`).then(res => res.json()).then((out) => {
-                    cb(out)
-                }).catch(err => {
-                    throw err
-                });
-            }
+loadRiddles(cb) {
+    cb([
+        {"id":222,"answer":"samolotem"},
+        {"id":223,"answer":"w sali treningowej"},
+        {"id":224,"answer":"Igsil"},
+        {"id":225,"answer":"fuzję"},
+        {"id":226,"answer":"steki"},
+        {"id":227,"answer":"Na festiwal"},
+        {"id":228,"answer":"Mergic"},
+        {"id":229,"answer":"W nawiedzonym domu"},
+        {"id":230,"answer":"Duchy"},
+        {"id":231,"answer":"Kamehameha"},
+        {"id":232,"answer":"do miasta"},
+        {"id":233,"answer":"Grimbel"},
+        {"id":234,"answer":"do centrum"},
+        {"id":235,"answer":"3"},
+        {"id":236,"answer":"12"},
+        {"id":237,"answer":"Sushi"},
+        {"id":238,"answer":"Cars"},
+        {"id":239,"answer":"Libel"},
+        {"id":240,"answer":"Dotknięciem"},
+        {"id":241,"answer":"W domu"},
+        {"id":242,"answer":"vegete"},
+        {"id":243,"answer":"fasolkę senzu"},
+        {"id":244,"answer":"teleportacją"},
+        {"id":245,"answer":"rękę"},
+        {"id":246,"answer":"10"},
+        {"id":247,"answer":"pszenicę"},
+        {"id":248,"answer":"Wandale"},
+        {"id":249,"answer":"Na planetę Beerusa"},
+        {"id":250,"answer":"200"},
+        {"id":251,"answer":"Energią Zniszczenia"},
+        {"id":255,"answer":"Gohan"},
+        {"id":256,"answer":"Szopa"},
+        {"id":257,"answer":"Gord"},
+        {"id":258,"answer":"Górscy bandyci"},
+        {"id":259,"answer":"Kamehameha"},
+        {"id":260,"answer":"Noc strachów"},
+        {"id":261,"answer":"Trzy"},
+        {"id":262,"answer":"Gil"},
+        {"id":263,"answer":"Cienisty czarnoksiężnik"},
+        {"id":264,"answer":"Drewniany strażnik"},
+        {"id":265,"answer":"Miotłą"},
+        {"id":266,"answer":"IP44"},
+        {"id":267,"answer":"Śnieżki"},
+        {"id":268,"answer":"Śnieżny Król"},
+        {"id":269,"answer":"kronoS"},
+        {"id":270,"answer":"FrostramentiumGlaciator"},
+        {"id":271,"answer":"Dziura"},
+        {"id":272,"answer":"Chmura"},
+        {"id":273,"answer":"Drewno"},
+        {"id":274,"answer":"bohaterem"},
+        {"id":275,"answer":"Złotą rybkę"},
+        {"id":276,"answer":"bursztyny"},
+        {"id":277,"answer":"3"},
+        {"id":278,"answer":"12000"},
+        {"id":280,"answer":"Wielkanocy"},
+        {"id":281,"answer":"Lawejto"},
+        {"id":282,"answer":"4"},
+        {"id":283,"answer":"Wielki Hopcio"},
+        {"id":284,"answer":"Mocnausz"},
+        {"id":290,"answer":"Planeta Festiva"},
+        {"id":291,"answer":"Dekoracje Festiwalowe"},
+        {"id":292,"answer":"2"},
+        {"id":293,"answer":"Majtek"},
+        {"id":294,"answer":"Komandor Aria"},
+        {"id":295,"answer":"Marco"},
+        {"id":296,"answer":"Świnie"},
+        {"id":297,"answer":"Nowicjusz Tom"},
+        {"id":298,"answer":"Sasza"},
+        {"id":299,"answer":"cystersi"},
+        {"id":300,"answer":"iseyin"},
+        {"id":301,"answer":"monachium"},
+        {"id":302,"answer":"brazylia"},
+        {"id":303,"answer":"james rodriguez"},
+        {"id":304,"answer":"chile"},
+        {"id":305,"answer":"stambuł"},
+        {"id":306,"answer":"urugwaj"},
+        {"id":307,"answer":"jestem bogiem"},
+        {"id":308,"answer":"imago"},
+        {"id":309,"answer":"eudajmonizm"},
+        {"id":310,"answer":"przyszłość"},
+        {"id":311,"answer":"czas"},
+        {"id":312,"answer":"cień"},
+        {"id":313,"answer":"orzechy"},
+        {"id":314,"answer":"deszcz"},
+        {"id":315,"answer":"kaimetsu"},
+        {"id":322,"answer":"bałwan"},
+        {"id":323,"answer":"tydzień"},
+        {"id":324,"answer":"zegar"},
+        {"id":325,"answer":"nożyczki"},
+        {"id":326,"answer":"56"},
+        {"id":330,"answer":"kala"},
+        {"id":331,"answer":"velk"},
+        {"id":332,"answer":"3"},
+        {"id":333,"answer":"koszmar"},
+        {"id":334,"answer":"tiko"},
+        {"id":335,"answer":"3"},
+        {"id":336,"answer":"squely"},
+        {"id":337,"answer":"nie"},
+        {"id":338,"answer":"z duchów"},
+        {"id":339,"answer":"maski"},
+        {"id":340,"answer":"Pan Marionetek"},
+        {"id":341,"answer":"Chochlik"},
+        {"id":342,"answer":"6 grudnia"},
+        {"id":343,"answer":"25 grudnia"},
+        {"id":344,"answer":"roboty"},
+        {"id":345,"answer":"dane"},
+        {"id":346,"answer":"Promień Śmiechu"},
+        {"id":347,"answer":"fala"},
+        {"id":348,"answer":"Kryształy Wspomnień"},
+        {"id":349,"answer":"Echo Tańca"},
+        {"id":350,"answer":"Kapsuła Czasu"},
+        {"id":101,"answer":"778"},
+        {"id":29,"answer":"N"},
+        {"id":30,"answer":"36"},
+        {"id":31,"answer":"24"},
+        {"id":27,"answer":"6"},
+        {"id":75,"answer":"10"},
+        {"id":86,"answer":"1"},
+        {"id":121,"answer":"GŁOS"},
+        {"id":122,"answer":"11 13 17"},
+        {"id":110,"answer":"O"},
+        {"id":114,"answer":"Słońce"},
+        {"id":116,"answer":"Grawitacja"},
+        {"id":97,"answer":"TAJEMNICA"},
+        {"id":92,"answer":"M72ELI"},
+        {"id":99,"answer":"DZIEN I NOC"},
+        {"id":36,"answer":"1603"},
+        {"id":40,"answer":"obol"},
+        {"id":286,"answer":"Cerealian"},
+        {"id":42,"answer":"death"},
+        {"id":253,"answer":"280"},
+        {"id":254,"answer":"50"},
+        {"id":28,"answer":"12"},
+        {"id":78,"answer":"15"},
+        {"id":85,"answer":"3"},
+        {"id":77,"answer":"17"},
+        {"id":74,"answer":"13"},
+        {"id":204,"answer":"4"},
+        {"id":79,"answer":"146"},
+        {"id":89,"answer":"2"},
+        {"id":149,"answer":"imie"},
+        {"id":150,"answer":"lewa reka"},
+        {"id":46,"answer":"stara wiedzma"},
+        {"id":87,"answer":"4"},
+        {"id":11,"answer":"NAMEK"},
+        {"id":12,"answer":"WALKA"},
+        {"id":9,"answer":"Mrok"},
+        {"id":22,"answer":"Tatami"},
+        {"id":353,"answer":"2"},
+        {"id":355,"answer":"3"},
+        {"id":73,"answer":"5"},
+        {"id":44,"answer":"KI"},
+        {"id":351,"answer":"liwia"},
+        {"id":352,"answer":"muszle"},
+        {"id":353,"answer":"2"},
+        {"id":354,"answer":"Bogdan"},
+        {"id":355,"answer":"3"}
+		
+    ]);
+}
             solveRiddle(r_id) {
                 let riddle = this.riddles.find((r) => r.id == r_id);
                 if (riddle) {
@@ -228,8 +382,7 @@ if (typeof GAME === 'undefined') { } else {
                 let settings = JSON.parse(localStorage.getItem("kws_settings"));
                 let settings_sample = {
                     hide_tracker: false,
-                    aeCodes: false,
-                    spawner: GAME.spawner
+                    aeCodes: false
                 };
                 if (settings) {
                     for (const key of Object.keys(settings_sample)) {
@@ -447,28 +600,31 @@ if (typeof GAME === 'undefined') { } else {
                 }
             }
             async manageAutoArena() {
-                while (true) {
-                    if (!this.auto_arena) {
-                        this.stopAutoArena();
-                        return;
-                    }
-            
-                    GAME.socket.emit('ga', {
-                        a: 46,
-                        type: 0
-                    });
-            
-                    await delay(5000);
-                    await this.attackAutoArena();
+                if (!this.auto_arena) {
+                    this.stopAutoArena();
+                    return;
                 }
+            
+                GAME.socket.emit('ga', {
+                    a: 46,
+                    type: 0
+                });
+            
+                await delay(1000);
+                this.attackAutoArena();
             }
             
             async attackAutoArena() {
-                const arenaCon = $("#arena_players");
-                const opponents = arenaCon.find('.player button[data-option="arena_attack"][data-quick="1"]:not(.initial_hide_forced)');
+                if (!this.auto_arena) {
+                    this.stopAutoArena();
+                    return;
+                }
             
-                if (opponents.length > 0 && GAME.timed == 0) {
-                    const opponentIndex = parseInt(opponents.first().attr("data-index"));
+                const $arenaCon = $("#arena_players");
+                const $opponents = $arenaCon.find('.player button[data-option="arena_attack"][data-quick="1"]:not(.initial_hide_forced)');
+            
+                if ($opponents.length > 0 && GAME.timed == 0) {
+                    const opponentIndex = parseInt($opponents.first().attr("data-index"));
             
                     GAME.socket.emit('ga', {
                         a: 46,
@@ -477,9 +633,12 @@ if (typeof GAME === 'undefined') { } else {
                         quick: 1
                     });
             
-                    await delay(250);
-                    return await this.attackAutoArena();
+                    await delay(500);
+                    return this.attackAutoArena();
                 } 
+                
+                await delay(5000);
+                this.manageAutoArena();
             }
             stopAutoArena() {
                 this.auto_arena = false;
@@ -816,7 +975,7 @@ if (typeof GAME === 'undefined') { } else {
                     <span class='kws_top_bar_section latencyElement' style='color:${lColor}'>⇅${latency}</span>
                     <span class='kws_top_bar_section sk_info' style='cursor:pointer;'>SK: <span style="color:${sk_status === "AKTYWNE" ? "lime" : "white"}">${sk_status}</span></span>
                     <span class='kws_top_bar_section train_upgr_info' style='cursor:pointer;'>KODY: <span style="color:${train_upgr === "AKTYWNE" ? "lime" : "white"}">${train_upgr}</span></span>
-                   
+                    <span class='kws_top_bar_section'>[ ${soulCardsHTML} ]</span>
                     <span class='kws_top_bar_section lvl' style='cursor:pointer;'>LVL: <span>${lvlh}/H</span></span>
                     <span class='kws_top_bar_section pvp' style='cursor:pointer;'>PVP: <span>${pvp_count}</span></span>
                     <span class='kws_top_bar_section arena' style='cursor:pointer;'>ARENA: <span>${arena_count}</span></span>
@@ -876,6 +1035,53 @@ if (typeof GAME === 'undefined') { } else {
                     }
                 }
             }
+            markDaily() {
+                let daily = ["ZADANIE PVM", "Zadanie PvP", "ROZWÓJ PLANETY", "ZADANIE IMPERIUM", "ZADANIE KLANOWE", "NAJLEPSZY KUCHA...", "REPUTACJA", "SYMBOL WYMIARÓW", "WYMIANA CHI", "ERMITA", "Nuda", "DOSTAWCA", "BOSKA MOC", "ROZGRZEWKA", "BOSKI ULEPSZACZ", "CZAS PODRÓŻNIKÓ...", "STRAŻNIK PORZĄD...", "CODZIENNY INSTY...", "HIPER SCALACZ", "DZIWNY MEDYK"];
+                daily = daily.map(item => item.trim().toLowerCase());
+                let markedQuests = [];
+                const questWithSep3 = document.querySelector('.sep3');
+                const lastSep3Element = $('.sep3').last().closest('.qtrack');
+                $('#quest_track_con .qtrack b').each(function () {
+                    let zawartoscB = $(this).text().trim().toLowerCase();
+                    if (daily.includes(zawartoscB) && !$(this).closest('.qtrack').find('.sep3').length) {
+                        if (!markedQuests.includes(zawartoscB)) {
+                            $(this).css("color", "#63aaff");
+                            if (!$(this).closest('.qtrack').hasClass('cloned')) {
+                                if (questWithSep3) {
+                                    lastSep3Element.after($(this).closest('.qtrack').clone());
+                                } else {
+                                    $('#drag_con').prepend($(this).closest('.qtrack').clone());
+                                }
+                                $(this).closest('.qtrack').addClass('cloned');
+                            }
+                            $(this).closest('.qtrack').remove();
+                            markedQuests.push(zawartoscB);
+                        }
+                    }
+                });
+            
+                const currentLocation = String(GAME.char_data.loc).toLowerCase();
+                $('[id^="track_quest_"]').each(function () {
+                    const questLoc = $(this).attr("data-loc").toLowerCase();
+                    let zawartoscB = $(this).find('b').first().text().trim().toLowerCase();
+                    if (questLoc === currentLocation && !$(this).find('.sep3').length) {
+                        if (!markedQuests.includes(zawartoscB)) {
+                            $(this).find('b').first().css("color", "yellow");
+                            if (!$(this).closest('.qtrack').hasClass('cloned')) {
+                                if (questWithSep3) {
+                                    lastSep3Element.after($(this).closest('.qtrack').clone());
+                                } else {
+                                    $('#drag_con').prepend($(this).closest('.qtrack').clone());
+                                }
+                                $(this).closest('.qtrack').addClass('cloned');
+                            }
+                            $(this).closest('.qtrack').remove();
+                            markedQuests.push(zawartoscB);
+                        }
+                    }
+                });
+            }
+            
             
             wojny2() {
                 var aimp = $("#e_admiral_player").find("[data-option=show_player]").attr("data-char_id");
@@ -1002,12 +1208,6 @@ if (typeof GAME === 'undefined') { } else {
                     GAME.socket.emit('ga', {a: 29, type: 1, instance: GAME.current_instance });
                 }
             }
-            safeLastmapBack() {
-                if (GAME.fast_locations.includes(GAME.char_data.loc)) {
-                    return GAME.socket.emit('ga', {a:16});
-                }
-                GAME.ask_confirm(19,{a:16});
-            };
             questProceed() {
                 if (JQS.qcc.is(":visible")) {
                     if ($("button[data-option=finish_quest]").length === 1) {
@@ -1097,8 +1297,6 @@ if (typeof GAME === 'undefined') { } else {
             }
             pvpKill() {
                 if (!JQS.chm.is(":focus")) {
-                    if ($("#arena_players").is(":visible")) return this.attackAutoArena(); 
-
                     let opponents = $("#player_list_con").find(".player button" + "[data-quick=1]" + ":not(.initial_hide_forced)");
                     if ($("button[data-option='load_more_players']").is(":visible")) {
                         $("button[data-option='load_more_players']").click();
@@ -1183,7 +1381,7 @@ if (typeof GAME === 'undefined') { } else {
             spawnList() {
                 let mob = "";
                 for (var i = 0; i < 6; i++) {
-                    mob += `<div class="spawn_row"><div class="newCheckbox"><input id="kws_spawner_ignore_${i}" type="checkbox" class="kws_spawner_check" name="ignoreMobs" value="${i}" ${(GAME.spawner && GAME.spawner[1][i] ? '' : 'checked')} /><label for="kws_spawner_ignore_${i}"></label></div><b>${LNG['mob_rank' + i]}</b></div>`;
+                    mob += `<div class="spawn_row"><div class="newCheckbox"><input id="kws_spawner_ignore_${i}" type="checkbox" class="kws_spawner_check" name="ignoreMobs" value="${i}" ${(GAME.spawner && GAME.spawner[1][i] ? '' : 'checked')} /><label for="kws_spawner_ignore_${i}"></label></div>${LNG.lab457}&nbsp;<b>${LNG['mob_rank' + i]}</b></div>`;
                 }
                 mob += `<div class="spawn_row" style="flex-direction: column;align-items: center;"><div>Użyte PA na spawn</div><div class="game_input small"><input id="kws_pa_max" name="usePaToSpawn" type="text" value="${GAME.spawner[0]}"></div></div>`;
                 return mob;
@@ -1621,38 +1819,17 @@ if (typeof GAME === 'undefined') { } else {
                         } else if (event.key === "n" || event.key === "N") {
                             this.useCompressor();
                         } else if (event.key === "2") {
-                            if (GAME.char_data.last_map) {
-                                this.safeLastmapBack();
-                            } else {
-                                // teleport private planet
-                                GAME.socket.emit('ga', {
-                                    a: 15,
-                                    type: 13
-                                });
-                            }
+                            GAME.socket.emit('ga', {
+                                a: 15,
+                                type: 13
+                            });
                         } else if (event.key === "3") {
-                            if (GAME.char_data.last_map) {
-                                this.safeLastmapBack();
-                            } else {
-                                // teleport clan planet
-                                GAME.socket.emit('ga', {
-                                    a: 39,
-                                    type: 32
-                                });
-                            }
+                            GAME.socket.emit('ga', {
+                                a: 39,
+                                type: 32
+                            });
                         } else if (event.key === "4") {
-                            if (GAME.char_data.last_map) {
-                                this.safeLastmapBack();
-                            } else {
-                                // teleport to character empire
-                                if (GAME.char_data.empire) {
-                                    GAME.socket.emit('ga', {
-                                        a: 50,
-                                        type: 5,
-                                        e: GAME.char_data.empire
-                                    });
-                                }
-                            }
+                            this.bless();
                         } else if (event.key === "5") {
                             setTimeout(() => {
                                 GAME.socket.emit('ga', {
@@ -1688,8 +1865,6 @@ if (typeof GAME === 'undefined') { } else {
                                     set: set
                                 });
                             }
-                        } else if (event.key === "9") {
-                            this.bless();
                         } else if (event.key === "=") {
                             this.createAlternativePilot();
                         } else if (event.key === ",") {
@@ -1698,13 +1873,13 @@ if (typeof GAME === 'undefined') { } else {
                             this.goToPreviousChar();
                         } else if (event.key === "Tab") {
                             this.goToNextChar();
-                        }
+                        } else if (event.key === "9" && JQS.qcc.is(":visible")) { }
                     }
                 });
                 $("body").on("click", ".qlink.load_afo", () => {
                     if (typeof this.afo_is_loaded == 'undefined') {
                         this.afo_is_loaded = true;
-                        $.get(gitUrl + "uncodedeeee.js", (data) => {
+                        $.get(gitUrl + "/main/uuux3.js", (data) => {
                             $("body").append(`<script>${data}<\/script>`);
                         }).fail(() => {
                             GAME.komunikat("Wystąpił błąd w ładowaniu skryptu, odśwież stronę i spróbuj ponownie!");
@@ -1753,7 +1928,7 @@ if (typeof GAME === 'undefined') { } else {
                         if (!overButton && !overTooltip) {
                             $kwsSpawnTooltip.fadeOut(150);
                         }
-                    }, 250);
+                    }, 100);
                 }
                 $("#kws_spawn input[type=checkbox], input[type=text]").change((chb) => {
                     switch ($(chb.target).attr("name")) {
@@ -1764,7 +1939,7 @@ if (typeof GAME === 'undefined') { } else {
                             this.updatePaToSpawn($(chb.target).val());
                             break;
                     }
-                    this.updateSettings()
+                    localStorage.setItem('kws_spawner', JSON.stringify(GAME.spawner));
                 });
                 $("#secondary_char_stats").append(` <div class="instance" data-toggle="tooltip" data-original-title="<div class=tt>Instancje <br /><span class=&quot;red&quot;><b>Kliknij by wykonać instancje</b></span></div>" class=""><i class="ico a11"></i> <span> <ul><ul/></span></div> <div class="activities" data-toggle="tooltip" data-original-title="<div class=tt>Aktywności <br /><span class=&quot;red&quot;><b>Kliknij by odebrać aktywności</b></span></div>" class=""><i class="ico a12"></i> <span> <ul><ul/></span></div>`);
                 $("body").on('change', '.autoExpeCodes input[type=checkbox]', (el) => {
@@ -2467,16 +2642,48 @@ if (typeof GAME === 'undefined') { } else {
             tooltip_bind();
             page_bind();
         }
-        GAME.parseTracker_o = GAME.parseTracker;
-        GAME.parseTracker = function(track){
-            GAME.parseTracker_o(track);
-
-            $('#drag_con').removeClass('scroll');
-            if (!kws.settings.hide_tracker) {
-                $('#drag_con').show();
-            } else {
-                $('#drag_con').hide();
+        GAME.parseTracker = function (track) {
+            GAME.socket.emit('ga', {
+                a: 22,
+                type: 3
+            });
+            track.sort((a, b) => a.want.type - b.want.type);
+            var con = '';
+            let zwykle_html_dsa = '';
+            let codzienne_html_dsa = '';
+            let main_quest = ``;
+            var any = false;
+            if (track && track.length) {
+                var len = track.length;
+                for (var i = 0; i < len; i++) {
+                    any = true;
+                    var qn = track[i].header;
+                    if (qn.length > 15) qn = qn.slice(0, 15) + '...';
+                    let attroqq = $(`#page_game_qb #qb_list #quest_log_tr${track[i].qb_id}`).find(`.qb_right:contains("[ Codzienne ]")`).length;
+                    if (track[i].m == 1) {
+                        main_quest += `<div id="track_quest_${track[i].qb_id}" class="qtrack option" data-option="go_teleport" data-loc="${track[i].loc}"><div class="sep3"></div><b style="color:orange;">${qn}</b> ${this.quest_want(track[i].want, track[i].qb_id)}</div>`;
+                    } else if (attroqq == 1) {
+                        codzienne_html_dsa += `<div id="track_quest_${track[i].qb_id}" class="qtrack option" data-option="go_teleport" data-loc="${track[i].loc}"><div class="sep2"></div><b style="color:#63aaff;" >${qn}</b> ${this.quest_want(track[i].want, track[i].qb_id)}</div>`;
+                    } else {
+                        zwykle_html_dsa += `<div id="track_quest_${track[i].qb_id}" class="qtrack option" data-option="go_teleport" data-loc="${track[i].loc}"><div class="sep2"></div><b>${qn}</b> ${this.quest_want(track[i].want, track[i].qb_id)}</div>`;
+                    }
+                }
             }
+            if (any) {
+                con += codzienne_html_dsa;
+                con += zwykle_html_dsa;
+                $('#drag_con').html(`${main_quest}${con}`);
+                $('#drag_con').removeClass('scroll');
+                $('#quest_track_con').show();
+                if (!kws.settings.hide_tracker) {
+                    $('#drag_con').show();
+                } else {
+                    $('#drag_con').hide();
+                }
+            } else {
+                $('#quest_track_con').hide();
+            }
+            kws.markDaily();
         }
         GAME.getEmpDetails = function (petd) {
             kws.findWorker(petd, (el) => {
@@ -2518,6 +2725,9 @@ if (typeof GAME === 'undefined') { } else {
                 });
                 return true
             }
+            setTimeout(() => {
+                kws.markDaily();
+            }, 100);
             return false
         }
         GAME.parseQuest = function (res) {
