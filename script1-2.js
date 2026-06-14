@@ -1213,6 +1213,12 @@ loadRiddles(cb) {
                     GAME.socket.emit('ga', {a: 29, type: 1, instance: GAME.current_instance });
                 }
             }
+			safeLastmapBack() {
+                if (GAME.fast_locations.includes(GAME.char_data.loc)) {
+                    return GAME.socket.emit('ga', {a:16});
+                }
+                GAME.ask_confirm(19,{a:16});
+            };
             questProceed() {
                 if (JQS.qcc.is(":visible")) {
                     if ($("button[data-option=finish_quest]").length === 1) {
@@ -1812,87 +1818,96 @@ loadRiddles(cb) {
                         return GAME.executeIx_o();
                     }
                 };
-$(document).keydown((event) => {
-    if (!$("input, textarea").is(":focus")) {
-        if (event.key === "x" || event.key === "X") {
-            this.questProceed();
-            kom_clear();
-        } else if (event.key === "b" || event.key === "B") {
-            this.pvpKill();
-        } else if (event.key === "`") {
-            this.open_instance();
-        } else if (event.key === "n" || event.key === "N") {
-            this.useCompressor();
-        } else if (event.key === "2") {
-            GAME.socket.emit('ga', {
-                a: 15,
-                type: 13
-            });
-        } else if (event.key === "3") {
-            GAME.socket.emit('ga', {
-                a: 39,
-                type: 32
-            });
-        } else if (event.key === "4") {
-            if (GAME.char_data.last_map) {
-                this.safeLastmapBack();
-            } else {
-                if (GAME.char_data.empire) {
-                    GAME.socket.emit('ga', {
-                        a: 50,
-                        type: 5,
-                        e: GAME.char_data.empire
-                    });
-                }
-            }
-        } else if (event.key === "5") {
-            setTimeout(() => {
-                GAME.socket.emit('ga', {
-                    a: 54,
-                    type: 0
+ $(document).keydown((event) => {
+                    if (!$("input, textarea").is(":focus")) {
+                        if (event.key === "x" || event.key === "X") {
+                            this.questProceed();
+                            kom_clear();
+                        } else if (event.key === "b" || event.key === "B") {
+                            this.pvpKill();
+                        } else if (event.key === "`" ) {
+                            this.open_instance();
+                        } else if (event.key === "n" || event.key === "N") {
+                            this.useCompressor();
+                        } else if (event.key === "2") {
+                            if (GAME.char_data.last_map) {
+                                this.safeLastmapBack();
+                            } else {
+                                // teleport private planet
+                                GAME.socket.emit('ga', {
+                                    a: 15,
+                                    type: 13
+                                });
+                            }
+                        } else if (event.key === "3") {
+                            if (GAME.char_data.last_map) {
+                                this.safeLastmapBack();
+                            } else {
+                                // teleport clan planet
+                                GAME.socket.emit('ga', {
+                                    a: 39,
+                                    type: 32
+                                });
+                            }
+                        } else if (event.key === "4") {
+                            if (GAME.char_data.last_map) {
+                                this.safeLastmapBack();
+                            } else {
+                                // teleport to character empire
+                                if (GAME.char_data.empire) {
+                                    GAME.socket.emit('ga', {
+                                        a: 50,
+                                        type: 5,
+                                        e: GAME.char_data.empire
+                                    });
+                                }
+                            }
+                        } else if (event.key === "5") {
+                            setTimeout(() => {
+                                GAME.socket.emit('ga', {
+                                    a: 54,
+                                    type: 0
+                                });
+                            }, 300);
+                            setTimeout(() => {
+                                this.vip();
+                            }, 600);
+                            GAME.socket.emit('ga', {
+                                a: 15,
+                                type: 7
+                            });
+                        } else if (event.key === "6") {
+                            GAME.socket.emit('ga', {
+                                a: 39,
+                                type: 46,
+                                rent: 3
+                            });
+                        } else if (event.key === "7") {
+                            GAME.socket.emit('ga', {
+                                a: 10,
+                                type: 2,
+                                ct: 0
+                            });
+                        } else if (event.key === "8") {
+                            let set = $("#ekw_sets").find(".option.ek_sets_all" + ":not(.current)").attr("data-set");
+                            if (set != undefined) {
+                                GAME.socket.emit('ga', {
+                                    a: 64,
+                                    type: 2,
+                                    set: set
+                                });
+                            }
+                        } else if (event.key === "9") {
+                            this.bless();
+                        } else if (event.key === "=") {
+                            this.createAlternativePilot();
+                        } else if (event.key === "Tab" && event.shiftKey) {
+                            this.switchCharacter('prev')
+                        } else if (event.key === "Tab") {
+                            this.switchCharacter('next')
+                        }
+                    }
                 });
-            }, 300);
-            setTimeout(() => {
-                this.vip();
-            }, 600);
-            GAME.socket.emit('ga', {
-                a: 15,
-                type: 7
-            });
-        } else if (event.key === "6") {
-            GAME.socket.emit('ga', {
-                a: 39,
-                type: 46,
-                rent: 3
-            });
-        } else if (event.key === "7") {
-            GAME.socket.emit('ga', {
-                a: 10,
-                type: 2,
-                ct: 0
-            });
-        } else if (event.key === "8") {
-            let set = $("#ekw_sets").find(".option.ek_sets_all:not(.current)").attr("data-set");
-            if (set != undefined) {
-                GAME.socket.emit('ga', {
-                    a: 64,
-                    type: 2,
-                    set: set
-                });
-            }
-        } else if (event.key === "9") {
-            this.bless();
-        } else if (event.key === "=") {
-            this.createAlternativePilot();
-        } else if (event.key === ",") {
-            this.goToPreviousChar();
-        } else if (event.key === "Tab" && event.shiftKey) {
-            this.goToPreviousChar();
-        } else if (event.key === "Tab") {
-            this.goToNextChar();
-        }
-    }
-});
                 $("body").on("click", ".qlink.load_afo", () => {
                     if (typeof this.afo_is_loaded == 'undefined') {
                         this.afo_is_loaded = true;
