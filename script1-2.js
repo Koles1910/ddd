@@ -1829,12 +1829,18 @@ loadRiddles(cb) {
                                 type: 32
                             });
                         } else if (event.key === "4") {
-                            
-							            GAME.socket.emit('ga', {
+                            if (GAME.char_data.last_map) {
+                                this.safeLastmapBack();
+                            } else {
+                                // teleport to character empire
+                                if (GAME.char_data.empire) {
+                                    GAME.socket.emit('ga', {
                                         a: 50,
                                         type: 5,
                                         e: GAME.char_data.empire
                                     });
+                                }
+                            }
                         } else if (event.key === "5") {
                             setTimeout(() => {
                                 GAME.socket.emit('ga', {
