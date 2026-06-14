@@ -1,6 +1,6 @@
 var checked = false;
 var latency = -1;
-const gitUrl = 'https://raw.githubusercontent.com/Koles1910/ddd/'
+const gitUrl = 'https://raw.githubusercontent.com/Koles1910/ddd/''
 const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
 if (typeof GAME === 'undefined') { } else {
@@ -23,8 +23,7 @@ if (typeof GAME === 'undefined') { } else {
         });
 
         class kwsv3 {
-            constructor(charactersManager) {
-                this.charactersManager = charactersManager;
+            constructor() {
                 this.isLogged((data) => {
                     Object.defineProperty(GAME, 'pid', {
                         writable: false
@@ -94,8 +93,7 @@ if (typeof GAME === 'undefined') { } else {
                     padding: 4px;
                 }
                 `);
-                const savedSpawner = localStorage.getItem('kws_spawner');
-                if (savedSpawner) GAME.spawner = JSON.parse(savedSpawner);
+                if (this.settings.spawner) GAME.spawner = this.settings.spawner;
                 $("body").append(`<div id="kws_spawn"> <div class="spawn_header">USTAWIENIA SPAWNU</div> <div id="kws_spawn2">${this.spawnList()}</div> </div>`);
                 this.addToCSS(`.quest_roll1{position:absolute; width:50px; height:50px; background:url('/gfx/layout/dice.png') 0 0; top:-25px; left:25px; cursor:pointer; filter:drop-shadow(0px 0px 10px lime)} .quest_roll2{position:absolute; width:50px; height:50px; background:url('/gfx/layout/dice.png') 0 0; top:-25px; left:75px; cursor:pointer; filter:drop-shadow(0px 0px 10px #00fdff)} .quest_roll3{position:absolute; width:50px; height:50px; background:url('/gfx/layout/dice.png') 0 0; top:-25px; left:125px; cursor:pointer; filter:drop-shadow(0px 0px 10px #ff0000)} .quest_roll:hover{background:url('/gfx/layout/dice.png') 0 -45px;} .quest_roll1:hover{background:url('/gfx/layout/dice.png') 0 -45px;} .quest_roll2:hover{background:url('/gfx/layout/dice.png') 0 -45px;} .quest_roll3:hover{background:url('/gfx/layout/dice.png') 0 -45px;}`);
                 this.addToCSS(`#lastmap_bar { top: 115px !important; }`);
@@ -199,6 +197,8 @@ if (typeof GAME === 'undefined') { } else {
                 GAME.socket.on('gr', (res) => {
                     this.handleSockets(res);
                 });
+                // add instances to fast_locations
+                GAME.fast_locations.push(369, 394, 405, 407, 472, 478, 577, 580, 872);
             }
             isLogged(cb) {
                 let waitForID = setInterval(() => {
@@ -382,7 +382,8 @@ loadRiddles(cb) {
                 let settings = JSON.parse(localStorage.getItem("kws_settings"));
                 let settings_sample = {
                     hide_tracker: false,
-                    aeCodes: false
+                    aeCodes: false,
+                    spawner: GAME.spawner
                 };
                 if (settings) {
                     for (const key of Object.keys(settings_sample)) {
@@ -600,31 +601,29 @@ loadRiddles(cb) {
                 }
             }
             async manageAutoArena() {
-                if (!this.auto_arena) {
-                    this.stopAutoArena();
-                    return;
+                while (true) {
+                    if (!this.auto_arena) {
+                        this.stopAutoArena();
+                        return;
+                    }
+            
+                    GAME.socket.emit('ga', {
+                        a: 46,
+                        type: 0
+                    });
+            
+                    await delay(500);
+                    await this.attackAutoArena();
+                    await delay(9500);
                 }
-            
-                GAME.socket.emit('ga', {
-                    a: 46,
-                    type: 0
-                });
-            
-                await delay(1000);
-                this.attackAutoArena();
             }
             
             async attackAutoArena() {
-                if (!this.auto_arena) {
-                    this.stopAutoArena();
-                    return;
-                }
+                const arenaCon = $("#arena_players");
+                const opponents = arenaCon.find('.player button[data-option="arena_attack"][data-quick="1"]:not(.initial_hide_forced)');
             
-                const $arenaCon = $("#arena_players");
-                const $opponents = $arenaCon.find('.player button[data-option="arena_attack"][data-quick="1"]:not(.initial_hide_forced)');
-            
-                if ($opponents.length > 0 && GAME.timed == 0) {
-                    const opponentIndex = parseInt($opponents.first().attr("data-index"));
+                if (opponents.length > 0 && GAME.timed == 0) {
+                    const opponentIndex = parseInt(opponents.first().attr("data-index"));
             
                     GAME.socket.emit('ga', {
                         a: 46,
@@ -633,12 +632,9 @@ loadRiddles(cb) {
                         quick: 1
                     });
             
-                    await delay(500);
-                    return this.attackAutoArena();
+                    await delay(100);
+                    return await this.attackAutoArena();
                 } 
-                
-                await delay(5000);
-                this.manageAutoArena();
             }
             stopAutoArena() {
                 this.auto_arena = false;
@@ -975,7 +971,7 @@ loadRiddles(cb) {
                     <span class='kws_top_bar_section latencyElement' style='color:${lColor}'>⇅${latency}</span>
                     <span class='kws_top_bar_section sk_info' style='cursor:pointer;'>SK: <span style="color:${sk_status === "AKTYWNE" ? "lime" : "white"}">${sk_status}</span></span>
                     <span class='kws_top_bar_section train_upgr_info' style='cursor:pointer;'>KODY: <span style="color:${train_upgr === "AKTYWNE" ? "lime" : "white"}">${train_upgr}</span></span>
-                    
+                    <span class='kws_top_bar_section'>[ ${soulCardsHTML} ]</span>
                     <span class='kws_top_bar_section lvl' style='cursor:pointer;'>LVL: <span>${lvlh}/H</span></span>
                     <span class='kws_top_bar_section pvp' style='cursor:pointer;'>PVP: <span>${pvp_count}</span></span>
                     <span class='kws_top_bar_section arena' style='cursor:pointer;'>ARENA: <span>${arena_count}</span></span>
@@ -1015,8 +1011,6 @@ loadRiddles(cb) {
                 let received = $("#act_prizes").find("div.act_prize.disabled").length;
                 let activities = `${activity}/185 (${received}/5)`;
                 $("#secondary_char_stats .activities ul").html(activities);
-
-                this.adjustCurrentCharacterId();
             }
             collectActivities() {
                 let received = $("#act_prizes").find("div.act_prize.disabled").length;
@@ -1034,126 +1028,6 @@ loadRiddles(cb) {
                         }
                     }
                 }
-            }
-            markDaily() {
-                let daily = ["ZADANIE PVM", "Zadanie PvP", "ROZWÓJ PLANETY", "ZADANIE IMPERIUM", "ZADANIE KLANOWE", "NAJLEPSZY KUCHA...", "REPUTACJA", "SYMBOL WYMIARÓW", "WYMIANA CHI", "ERMITA", "Nuda", "DOSTAWCA", "BOSKA MOC", "ROZGRZEWKA", "BOSKI ULEPSZACZ", "CZAS PODRÓŻNIKÓ...", "STRAŻNIK PORZĄD...", "CODZIENNY INSTY...", "HIPER SCALACZ", "DZIWNY MEDYK"];
-                daily = daily.map(item => item.trim().toLowerCase());
-                let markedQuests = [];
-                const questWithSep3 = document.querySelector('.sep3');
-                const lastSep3Element = $('.sep3').last().closest('.qtrack');
-                $('#quest_track_con .qtrack b').each(function () {
-                    let zawartoscB = $(this).text().trim().toLowerCase();
-                    if (daily.includes(zawartoscB) && !$(this).closest('.qtrack').find('.sep3').length) {
-                        if (!markedQuests.includes(zawartoscB)) {
-                            $(this).css("color", "#63aaff");
-                            if (!$(this).closest('.qtrack').hasClass('cloned')) {
-                                if (questWithSep3) {
-                                    lastSep3Element.after($(this).closest('.qtrack').clone());
-                                } else {
-                                    $('#drag_con').prepend($(this).closest('.qtrack').clone());
-                                }
-                                $(this).closest('.qtrack').addClass('cloned');
-                            }
-                            $(this).closest('.qtrack').remove();
-                            markedQuests.push(zawartoscB);
-                        }
-                    }
-                });
-            
-                const currentLocation = String(GAME.char_data.loc).toLowerCase();
-                $('[id^="track_quest_"]').each(function () {
-                    const questLoc = $(this).attr("data-loc").toLowerCase();
-                    let zawartoscB = $(this).find('b').first().text().trim().toLowerCase();
-                    if (questLoc === currentLocation && !$(this).find('.sep3').length) {
-                        if (!markedQuests.includes(zawartoscB)) {
-                            $(this).find('b').first().css("color", "yellow");
-                            if (!$(this).closest('.qtrack').hasClass('cloned')) {
-                                if (questWithSep3) {
-                                    lastSep3Element.after($(this).closest('.qtrack').clone());
-                                } else {
-                                    $('#drag_con').prepend($(this).closest('.qtrack').clone());
-                                }
-                                $(this).closest('.qtrack').addClass('cloned');
-                            }
-                            $(this).closest('.qtrack').remove();
-                            markedQuests.push(zawartoscB);
-                        }
-                    }
-                });
-            }
-                                    safeLastmapBack() {
-                if (GAME.fast_locations.includes(GAME.char_data.loc)) {
-                    return GAME.socket.emit('ga', {a:16});
-                }
-                GAME.ask_confirm(19,{a:16});
-            };
-
-            wojny2() {
-                var aimp = $("#e_admiral_player").find("[data-option=show_player]").attr("data-char_id");
-                var imp = $("#leader_player").find("[data-option=show_player]").attr("data-char_id");
-                if (!adimp) {
-                    setTimeout(() => {
-                        GAME.socket.emit('ga', {
-                            a: 50,
-                            type: 0,
-                            empire: GAME.char_data.empire
-                        });
-                    }, 100);
-                    adimp = true;
-                    setTimeout(() => {
-                        this.wojny2();
-                    }, 300);
-                } else if (!GAME.emp_enemies.includes(1) && ![GAME.char_data.empire].includes(1) && (kws.check_imp().includes(GAME.char_id) || kws.check_imp2().includes(GAME.char_id) || imp == GAME.char_id || aimp == GAME.char_id)) {
-                    GAME.socket.emit('ga', {
-                        a: 50,
-                        type: 7,
-                        target: 1
-                    });
-                    setTimeout(() => {
-                        this.wojny2();
-                    }, 300);
-                } else if (!GAME.emp_enemies.includes(2) && ![GAME.char_data.empire].includes(2) && (kws.check_imp().includes(GAME.char_id) || kws.check_imp2().includes(GAME.char_id) || imp == GAME.char_id || aimp == GAME.char_id)) {
-                    GAME.socket.emit('ga', {
-                        a: 50,
-                        type: 7,
-                        target: 2
-                    });
-                    setTimeout(() => {
-                        this.wojny2();
-                    }, 300);
-                } else if (!GAME.emp_enemies.includes(3) && ![GAME.char_data.empire].includes(3) && (kws.check_imp().includes(GAME.char_id) || kws.check_imp2().includes(GAME.char_id) || imp == GAME.char_id || aimp == GAME.char_id)) {
-                    GAME.socket.emit('ga', {
-                        a: 50,
-                        type: 7,
-                        target: 3
-                    });
-                    setTimeout(() => {
-                        this.wojny2();
-                    }, 300);
-                } else if (!GAME.emp_enemies.includes(4) && ![GAME.char_data.empire].includes(4) && (kws.check_imp().includes(GAME.char_id) || kws.check_imp2().includes(GAME.char_id) || imp == GAME.char_id || aimp == GAME.char_id)) {
-                    GAME.socket.emit('ga', {
-                        a: 50,
-                        type: 7,
-                        target: 4
-                    });
-                    setTimeout(() => {
-                        this.wojny2();
-                    }, 300);
-                } else { }
-            }
-            check_imp() {
-                var tab = [];
-                for (var i = 0; i < 3; i++) {
-                    tab[i] = parseInt($("#empire_heroes .activity").eq(i).find("[data-option=show_player]").attr("data-char_id"));
-                }
-                return tab;
-            }
-            check_imp2() {
-                var tab = [];
-                for (var i = 0; i < 3; i++) {
-                    tab[i] = parseInt($("#empire_efrags .activity").eq(i).find("[data-option=show_player]").attr("data-char_id"));
-                }
-                return tab;
             }
             vip() {
                 var month = $("#monthly_vip_rewards").find(".vip_cat.option" + ":not(.disabled)" + ":not(.received)");
@@ -1213,6 +1087,12 @@ loadRiddles(cb) {
                     GAME.socket.emit('ga', {a: 29, type: 1, instance: GAME.current_instance });
                 }
             }
+            safeLastmapBack() {
+                if (GAME.fast_locations.includes(GAME.char_data.loc)) {
+                    return GAME.socket.emit('ga', {a:16});
+                }
+                GAME.ask_confirm(19,{a:16});
+            };
             questProceed() {
                 if (JQS.qcc.is(":visible")) {
                     if ($("button[data-option=finish_quest]").length === 1) {
@@ -1302,6 +1182,8 @@ loadRiddles(cb) {
             }
             pvpKill() {
                 if (!JQS.chm.is(":focus")) {
+                    if ($("#arena_players").is(":visible")) return this.attackAutoArena(); 
+
                     let opponents = $("#player_list_con").find(".player button" + "[data-quick=1]" + ":not(.initial_hide_forced)");
                     if ($("button[data-option='load_more_players']").is(":visible")) {
                         $("button[data-option='load_more_players']").click();
@@ -1386,7 +1268,7 @@ loadRiddles(cb) {
             spawnList() {
                 let mob = "";
                 for (var i = 0; i < 6; i++) {
-                    mob += `<div class="spawn_row"><div class="newCheckbox"><input id="kws_spawner_ignore_${i}" type="checkbox" class="kws_spawner_check" name="ignoreMobs" value="${i}" ${(GAME.spawner && GAME.spawner[1][i] ? '' : 'checked')} /><label for="kws_spawner_ignore_${i}"></label></div>${LNG.lab457}&nbsp;<b>${LNG['mob_rank' + i]}</b></div>`;
+                    mob += `<div class="spawn_row"><div class="newCheckbox"><input id="kws_spawner_ignore_${i}" type="checkbox" class="kws_spawner_check" name="ignoreMobs" value="${i}" ${(GAME.spawner && GAME.spawner[1][i] ? '' : 'checked')} /><label for="kws_spawner_ignore_${i}"></label></div><b>${LNG['mob_rank' + i]}</b></div>`;
                 }
                 mob += `<div class="spawn_row" style="flex-direction: column;align-items: center;"><div>Użyte PA na spawn</div><div class="game_input small"><input id="kws_pa_max" name="usePaToSpawn" type="text" value="${GAME.spawner[0]}"></div></div>`;
                 return mob;
@@ -1563,11 +1445,11 @@ loadRiddles(cb) {
                     this.resetAFO();
                 });
                 $("body").on("click", "#changeProfilePrev", () => {
-                    this.goToPreviousChar();
+                    this.switchCharacter('prev')
                     this.resetCalculatedPower();
                 });
                 $("body").on("click", "#changeProfileNext", () => {
-                    this.goToNextChar();
+                    this.switchCharacter('next')
                     this.resetCalculatedPower();
                 });
                 $("body").on("click", `button[data-page="stelep"].cps`, () => {
@@ -1812,87 +1694,96 @@ loadRiddles(cb) {
                         return GAME.executeIx_o();
                     }
                 };
-$(document).keydown((event) => {
-    if (!$("input, textarea").is(":focus")) {
-        if (event.key === "x" || event.key === "X") {
-            this.questProceed();
-            kom_clear();
-        } else if (event.key === "b" || event.key === "B") {
-            this.pvpKill();
-        } else if (event.key === "`") {
-            this.open_instance();
-        } else if (event.key === "n" || event.key === "N") {
-            this.useCompressor();
-        } else if (event.key === "2") {
-            GAME.socket.emit('ga', {
-                a: 15,
-                type: 13
-            });
-        } else if (event.key === "3") {
-            GAME.socket.emit('ga', {
-                a: 39,
-                type: 32
-            });
-        } else if (event.key === "4") {
-            if (GAME.char_data.last_map) {
-                this.safeLastmapBack();
-            } else {
-                if (GAME.char_data.empire) {
-                    GAME.socket.emit('ga', {
-                        a: 50,
-                        type: 5,
-                        e: GAME.char_data.empire
-                    });
-                }
-            }
-        } else if (event.key === "5") {
-            setTimeout(() => {
-                GAME.socket.emit('ga', {
-                    a: 54,
-                    type: 0
+                $(document).keydown((event) => {
+                    if (!$("input, textarea").is(":focus")) {
+                        if (event.key === "x" || event.key === "X") {
+                            this.questProceed();
+                            kom_clear();
+                        } else if (event.key === "b" || event.key === "B") {
+                            this.pvpKill();
+                        } else if (event.key === "`" ) {
+                            this.open_instance();
+                        } else if (event.key === "n" || event.key === "N") {
+                            this.useCompressor();
+                        } else if (event.key === "2") {
+                            if (GAME.char_data.last_map) {
+                                this.safeLastmapBack();
+                            } else {
+                                // teleport private planet
+                                GAME.socket.emit('ga', {
+                                    a: 15,
+                                    type: 13
+                                });
+                            }
+                        } else if (event.key === "3") {
+                            if (GAME.char_data.last_map) {
+                                this.safeLastmapBack();
+                            } else {
+                                // teleport clan planet
+                                GAME.socket.emit('ga', {
+                                    a: 39,
+                                    type: 32
+                                });
+                            }
+                        } else if (event.key === "4") {
+                            if (GAME.char_data.last_map) {
+                                this.safeLastmapBack();
+                            } else {
+                                // teleport to character empire
+                                if (GAME.char_data.empire) {
+                                    GAME.socket.emit('ga', {
+                                        a: 50,
+                                        type: 5,
+                                        e: GAME.char_data.empire
+                                    });
+                                }
+                            }
+                        } else if (event.key === "5") {
+                            setTimeout(() => {
+                                GAME.socket.emit('ga', {
+                                    a: 54,
+                                    type: 0
+                                });
+                            }, 300);
+                            setTimeout(() => {
+                                this.vip();
+                            }, 600);
+                            GAME.socket.emit('ga', {
+                                a: 15,
+                                type: 7
+                            });
+                        } else if (event.key === "6") {
+                            GAME.socket.emit('ga', {
+                                a: 39,
+                                type: 46,
+                                rent: 3
+                            });
+                        } else if (event.key === "7") {
+                            GAME.socket.emit('ga', {
+                                a: 10,
+                                type: 2,
+                                ct: 0
+                            });
+                        } else if (event.key === "8") {
+                            let set = $("#ekw_sets").find(".option.ek_sets_all" + ":not(.current)").attr("data-set");
+                            if (set != undefined) {
+                                GAME.socket.emit('ga', {
+                                    a: 64,
+                                    type: 2,
+                                    set: set
+                                });
+                            }
+                        } else if (event.key === "9") {
+                            this.bless();
+                        } else if (event.key === "=") {
+                            this.createAlternativePilot();
+                        } else if (event.key === "Tab" && event.shiftKey) {
+                            this.switchCharacter('prev')
+                        } else if (event.key === "Tab") {
+                            this.switchCharacter('next')
+                        }
+                    }
                 });
-            }, 300);
-            setTimeout(() => {
-                this.vip();
-            }, 600);
-            GAME.socket.emit('ga', {
-                a: 15,
-                type: 7
-            });
-        } else if (event.key === "6") {
-            GAME.socket.emit('ga', {
-                a: 39,
-                type: 46,
-                rent: 3
-            });
-        } else if (event.key === "7") {
-            GAME.socket.emit('ga', {
-                a: 10,
-                type: 2,
-                ct: 0
-            });
-        } else if (event.key === "8") {
-            let set = $("#ekw_sets").find(".option.ek_sets_all:not(.current)").attr("data-set");
-            if (set != undefined) {
-                GAME.socket.emit('ga', {
-                    a: 64,
-                    type: 2,
-                    set: set
-                });
-            }
-        } else if (event.key === "9") {
-            this.bless();
-        } else if (event.key === "=") {
-            this.createAlternativePilot();
-        } else if (event.key === ",") {
-            this.goToPreviousChar();
-        } else if (event.key === "Tab" && event.shiftKey) {
-            this.goToPreviousChar();
-        } else if (event.key === "Tab") {
-            this.goToNextChar();
-        }
-    }
-});
                 $("body").on("click", ".qlink.load_afo", () => {
                     if (typeof this.afo_is_loaded == 'undefined') {
                         this.afo_is_loaded = true;
@@ -1945,7 +1836,7 @@ $(document).keydown((event) => {
                         if (!overButton && !overTooltip) {
                             $kwsSpawnTooltip.fadeOut(150);
                         }
-                    }, 100);
+                    }, 250);
                 }
                 $("#kws_spawn input[type=checkbox], input[type=text]").change((chb) => {
                     switch ($(chb.target).attr("name")) {
@@ -1956,7 +1847,7 @@ $(document).keydown((event) => {
                             this.updatePaToSpawn($(chb.target).val());
                             break;
                     }
-                    localStorage.setItem('kws_spawner', JSON.stringify(GAME.spawner));
+                    this.updateSettings()
                 });
                 $("#secondary_char_stats").append(` <div class="instance" data-toggle="tooltip" data-original-title="<div class=tt>Instancje <br /><span class=&quot;red&quot;><b>Kliknij by wykonać instancje</b></span></div>" class=""><i class="ico a11"></i> <span> <ul><ul/></span></div> <div class="activities" data-toggle="tooltip" data-original-title="<div class=tt>Aktywności <br /><span class=&quot;red&quot;><b>Kliknij by odebrać aktywności</b></span></div>" class=""><i class="ico a12"></i> <span> <ul><ul/></span></div>`);
                 $("body").on('change', '.autoExpeCodes input[type=checkbox]', (el) => {
@@ -2480,21 +2371,19 @@ $(document).keydown((event) => {
                     this.useCompressor()
                 });
             }
-            goToNextChar() {
+            switchCharacter(direction) {
+                const charList = [...document.querySelectorAll('#char_list_con li')].map(li => Number(li.dataset.char_id));
+                const charIndex = charList.indexOf(GAME.char_data.id)
+
                 this.resetAFO();
-                var charId = this.charactersManager.getNextCharId();
-                GAME.emitOrder({ a: 2, char_id: charId });
-            }
-            goToPreviousChar() {
-                this.resetAFO();
-                var charId = this.charactersManager.getPreviousCharId();
-                GAME.emitOrder({ a: 2, char_id: charId });
-            }
-            adjustCurrentCharacterId() {
-                var thisCharId = GAME.char_id;
-                if (thisCharId != this.charactersManager.currentCharacterId) {
-                    this.charactersManager.setCurrentCharacterId(thisCharId);
+
+                let targetIndex;
+                if (direction === 'next') {
+                    targetIndex = (charIndex + 1) % charList.length;
+                } else if (direction === 'prev') {
+                    targetIndex = (charIndex - 1 + charList.length) % charList.length;
                 }
+                GAME.emitOrder({ a: 2, char_id: charList[targetIndex] });
             }
             resetAFO() {
                 //console.log("KWA_RESET_AFO: reset AFO values");
@@ -2525,7 +2414,7 @@ $(document).keydown((event) => {
         GAME.socket.on('pong', function(ms) {
             latency = ms;
         });
-        const kws = new kwsv3(kwsLocalCharacters);
+        const kws = new kwsv3();
         GAME.komunikat2 = function (kom) {
             if (this.koms.indexOf(kom) == -1) {
                 if (this.komc > 50) this.komc = 40;
@@ -2535,120 +2424,74 @@ $(document).keydown((event) => {
                 kom_close_bind();
             }
         }
+        GAME.cached_data_o = GAME.cached_data;
         GAME.cached_data = function () {
-            var pos = $('#char_buffs').offset();
-            pos.left -= 75;
-            pos.top -= 75;
-            this.char_buffs_pos = pos;
-            if (GAME.char_id != 0 && GAME.quick_opts.online_reward) {
-                setTimeout(() => {
-                    GAME.socket.emit('ga', {
-                        a: 26,
-                        type: 1
-                    });
-                    setTimeout(() => {
-                        $('#daily_reward').fadeOut();
-                        kom_clear();
-                    }, 400);
-                }, 1800);
-            }
-            setTimeout(() => {
-                if (GAME.emp_wars.length < 3 && GAME.quick_opts.empire) {
-                    setTimeout(() => {
-                        kws.wojny2();
-                    }, 300);
-                }
-            }, 1500);
+            GAME.cached_data_o();
+
             GAME.startLevel = GAME.char_data.level;
             GAME.startTime = Date.now();
-            setTimeout(() => {
-                if (GAME.char_data.planetary == 0) {
-                    setTimeout(() => {
-                        GAME.socket.emit('ga', {
-                            a: 39,
-                            type: 34
-                        });
-                    }, 300);
-                }
-            }, 1200);
+            kws.workers_info = [false, false];
+            arena_count = 0;
+            pvp_count = 0;
+
+            if (GAME.char_data.planetary == 0) {
+                setTimeout(() => {
+                    GAME.socket.emit('ga', {
+                        a: 39,
+                        type: 34
+                    });
+                }, 300);
+            }
+
             const emitCalls = [{
-                a: 33,
-                type: 0
-            }, {
                 a: 49,
                 type: 0
             }, {
-                a: 29,
+                a: 33,
                 type: 0
             },];
-            let cd = [300, 600, 900];
+            let cd = [200, 400];
             emitCalls.forEach((data, i) => {
                 setTimeout(() => {
                     GAME.socket.emit('ga', data);
                 }, cd[i]);
             });
             $('#train_uptime').html(GAME.showTimer(GAME.char_data.train_ucd - GAME.getTime()));
-            setTimeout(() => {
-                if (kws.check_act()) {
-                    $("#secondary_char_stats .activities").click();
-                }
-            }, 1200);
-            GAME.parseQuickOpts(1);
-            kws.workers_info = [false, false];
-            arena_count = 0;
-            pvp_count = 0;
-            setTimeout(() => {
-                if ((GAME.char_data.reborn == 4 || GAME.char_data.reborn == 5) && GAME.char_data.alt_transform_expiry < GAME.getTime()) {
-                    GAME.socket.emit('ga', {
-                        a: 18,
-                        type: 8,
-                        tech_id: 134
-                    });
-                }
-            }, 5300);
+            GAME.parseQuickOpts();
         }
-        GAME.parseQuickOpts = function (newq_bar = false) {
-            var opts = '';
-            if (this.quick_opts.tutorial) {
-                this.tutorials = this.quick_opts.tutorial;
-                opts += `<img id="open_tuts" src="/gfx/layout/helper.png" class="qlink2 option" data-option="open_tuts" data-toggle="tooltip" data-original-title="<div class=tt>${LNG.lab358}</div>" />`;
-                $.getJSON('/json/tutorial.json', function (json) {
-                    GAME.tutorial_data = json.tuts;
-                    GAME.checkTutorial();
-                });
+        GAME.parseQuickOpts_o = GAME.parseQuickOpts;
+        GAME.parseQuickOpts = function(){
+            GAME.parseQuickOpts_o()
+
+            const ssjClass = this.quick_opts.ssj[0] == "116" ? "_uio" : this.quick_opts.ssj[1];
+
+            const utHtml = `
+                  <div class="option qlink ssj${ssjClass} show_qat" data-option="use_transform" data-tech="${this.quick_opts.ssj[0]}" data-toggle="tooltip" data-original-title="<div class=tt>${LNG.lab139}</div>"></div>
+                  <div id="quick_allTransformations"></div>
+                  `;
+            $('.option[data-option="use_transform"]').replaceWith(utHtml);
+
+            const empireHtml = `
+                  <div class="select_page qlink emp${this.quick_opts.empire} empPos" data-page="game_empire" data-toggle="tooltip" data-original-title="<div class=tt>${LNG['empire' + this.quick_opts.empire]}</div>"></div>
+                  <div class="go_to_emp_con"> <div class="qlink go_to_emp emp1" style="filter:hue-rotate(168deg);" emp="1" data-toggle="tooltip" data-original-title="<div class=tt>Wejdź na siedzibę</div>"></div> <div class="qlink go_to_emp emp2" style="filter:hue-rotate(168deg);" emp="2" data-toggle="tooltip" data-original-title="<div class=tt>Wejdź na siedzibę</div>"></div> <div class="qlink go_to_emp emp3" style="filter:hue-rotate(168deg);" emp="3" data-toggle="tooltip" data-original-title="<div class=tt>Wejdź na siedzibę</div>"></div> <div class="qlink go_to_emp emp4" style="filter:hue-rotate(168deg);" emp="4" data-toggle="tooltip" data-original-title="<div class=tt>Wejdź na siedzibę</div>"></div> </div>
+                  `;
+            $('#quick_bar .select_page[data-page="game_empire"]').replaceWith(empireHtml);
+
+            let opts = '';
+
+            opts += '<br>';
+            if (GAME.char_data && GAME.char_data.klan_rent == 0) {
+                opts += `<div class="qlink get_titles_list" style="filter:hue-rotate(168deg);background-image: url('https://i.imgur.com/0eQCqBl.png');" data-toggle="tooltip" data-original-title="<div class=tt>Zmień tytuł</div>"></div>`;
             }
-            if (this.quick_opts.private_planet) opts += `<div class="option qlink priv" data-option="private_teleport" data-toggle="tooltip" data-original-title="<div class=tt>${LNG.lab138}</div>"></div>`;
-            if (this.quick_opts.teleport) opts += `<div class="option qlink tele" data-option="use_teleport" data-toggle="tooltip" data-original-title="<div class=tt>${LNG.lab140}</div>"></div>`;
-            if (this.quick_opts.travel) opts += `<div class="option qlink trav" data-option="use_travel" data-toggle="tooltip" data-original-title="<div class=tt>${LNG.lab141}</div>"></div>`;
-            if (this.quick_opts.ssj) {
-                opts += `<div class="option qlink ssj${this.quick_opts.ssj[0] == "116" ? "_uio" : this.quick_opts.ssj[1]} show_qat" data-option="use_transform" data-tech="${this.quick_opts.ssj[0]}"data-toggle="tooltip" data-original-title="<div class=tt>${LNG.lab139}</div>"></div>`;
-                opts += `<div id="quick_allTransformations"></div>`;
-            }
-            if (this.quick_opts.online_reward) opts += `<div class="option qlink dail" data-option="daily_reward" data-toggle="tooltip" data-original-title="<div class=tt>${LNG.lab176}</div>"></div>`;
-            if (this.quick_opts.bless) opts += `<div class="select_page qlink bles" data-page="game_buffs" data-toggle="tooltip" data-original-title="<div class=tt>${LNG.lab188}</div>"></div>`;
-            if (this.quick_opts.sub && this.quick_opts.sub.length) opts += `<div class="option qlink subs" data-option="quick_use_subs" data-toggle="tooltip" data-original-title="<div class=tt>${LNG.lab189}</div>"></div>`;
-            if (this.quick_opts.senzus && this.quick_opts.senzus.length) {
-                opts += `<div class="option qlink senz" data-option="quick_use_senzu" data-toggle="tooltip" data-original-title="<div class=tt>${LNG.lab190}</div>"></div>`;
-            }
-            if (this.quick_opts.empire) {
-                opts += `<div class="select_page qlink emp${this.quick_opts.empire} empPos" data-page="game_empire" data-toggle="tooltip" data-original-title="<div class=tt>${LNG['empire' + this.quick_opts.empire]}</div>"></div>`;
-                opts += `<div class="go_to_emp_con"> <div class="qlink go_to_emp emp1" style="filter:hue-rotate(168deg);" emp="1" data-toggle="tooltip" data-original-title="<div class=tt>Wejdź na siedzibę</div>"></div> <div class="qlink go_to_emp emp2" style="filter:hue-rotate(168deg);" emp="2" data-toggle="tooltip" data-original-title="<div class=tt>Wejdź na siedzibę</div>"></div> <div class="qlink go_to_emp emp3" style="filter:hue-rotate(168deg);" emp="3" data-toggle="tooltip" data-original-title="<div class=tt>Wejdź na siedzibę</div>"></div> <div class="qlink go_to_emp emp4" style="filter:hue-rotate(168deg);" emp="4" data-toggle="tooltip" data-original-title="<div class=tt>Wejdź na siedzibę</div>"></div> </div>`;
-            }
-            if (newq_bar || GAME.char_id) {
-                opts += '<br>';
-                if (GAME.clan_laws) {
-                    opts += `<div class="option qlink priv" style="filter:hue-rotate(168deg);" data-option="clan_planet_travel" data-toggle="tooltip" data-original-title="<div class=tt>Planeta klanowa</div>"></div>`;
-                }
-                if (GAME.char_data.klan_rent == 0) {
-                    opts += `<div class="qlink get_titles_list" style="filter:hue-rotate(168deg);background-image: url('https://i.imgur.com/0eQCqBl.png');" data-toggle="tooltip" data-original-title="<div class=tt>Zmień tytuł</div>"></div>`;
-                }
-                opts += `<div class="qlink load_afo" style="filter:hue-rotate(168deg);background-image: url('https://i.imgur.com/P8sJgQz.png');" data-toggle="tooltip" data-original-title="<div class=tt>Załaduj AFO</div>"></div>`;
-                opts += `<div class="qlink sideIcons manage_auto_abyss${kws.auto_abyss ? ' kws_active_icon' : ''}" style="filter:hue-rotate(168deg);background-image: url('https://i.imgur.com/j5eQv2B.png');display:block;top:-136px;position:absolute;" data-toggle="tooltip" data-original-title="<div class=tt>[Włącz / Wyłącz] Atakowanie Otchłani</div>"></div>`;
-                opts += `<div class="qlink sideIcons manage_auto_arena${kws.auto_arena ? ' kws_active_icon' : ''}" style="filter:hue-rotate(168deg);background-image: url('https://i.imgur.com/rAroNzD.png');display:block;top:-104px;position:absolute;" data-toggle="tooltip" data-original-title="<div class=tt>[Włącz / Wyłącz] Atakowanie na Arenie</div>"></div>`;
-                opts += `<div class="qlink sideIcons manage_autoExpeditions${kws.autoExpeditions ? ' kws_active_icon' : ''}" style="filter:hue-rotate(168deg);background-image: url('https://i.imgur.com/uSMzLBb.png');display:block;top:-72px;position:absolute;" data-toggle="tooltip" data-original-title="<div class=tt>[Włącz / Wyłącz] Automatyczne Wyprawy</div>"></div>`;
-                opts += ` <div class="autoExpeCodes"> <div style="padding-left:8px;"> <label for="aeCodes" style="cursor:pointer;">KODY</label> <div class="newCheckbox"><input type="checkbox" id="aeCodes" name="aeCodes" ${kws.settings.aeCodes ? "checked" : ""} /><label for="aeCodes"></label></div> </div> </div>`;
-            }
-            $('#quick_bar').html(opts);
+            opts += `<div class="qlink load_afo" style="filter:hue-rotate(168deg);background-image: url('https://i.imgur.com/P8sJgQz.png');" data-toggle="tooltip" data-original-title="<div class=tt>Załaduj AFO</div>"></div>`;
+
+            opts += `<div class="qlink sideIcons manage_auto_abyss${kws.auto_abyss ? ' kws_active_icon' : ''}" style="filter:hue-rotate(168deg);background-image: url('https://i.imgur.com/j5eQv2B.png');display:block;top:-136px;position:absolute;" data-toggle="tooltip" data-original-title="<div class=tt>[Włącz / Wyłącz] Atakowanie Otchłani</div>"></div>`;
+            opts += `<div class="qlink sideIcons manage_auto_arena${kws.auto_arena ? ' kws_active_icon' : ''}" style="filter:hue-rotate(168deg);background-image: url('https://i.imgur.com/rAroNzD.png');display:block;top:-104px;position:absolute;" data-toggle="tooltip" data-original-title="<div class=tt>[Włącz / Wyłącz] Atakowanie na Arenie</div>"></div>`;
+            opts += `<div class="qlink sideIcons manage_autoExpeditions${kws.autoExpeditions ? ' kws_active_icon' : ''}" style="filter:hue-rotate(168deg);background-image: url('https://i.imgur.com/uSMzLBb.png');display:block;top:-72px;position:absolute;" data-toggle="tooltip" data-original-title="<div class=tt>[Włącz / Wyłącz] Automatyczne Wyprawy</div>"></div>`;
+            opts += ` <div class="autoExpeCodes"> <div style="padding-left:8px;"> <label for="aeCodes" style="cursor:pointer;">KODY</label> <div class="newCheckbox"><input type="checkbox" id="aeCodes" name="aeCodes" ${kws.settings.aeCodes ? "checked" : ""} /><label for="aeCodes"></label></div> </div> </div>`;
+
+            $('#quick_bar').append(opts);
+
             if (GAME.char_id && GAME.char_data.klan_rent === 0) {
                 kws.listQts();
                 if ("empire" in GAME.quick_opts) {
@@ -2659,48 +2502,16 @@ $(document).keydown((event) => {
             tooltip_bind();
             page_bind();
         }
-        GAME.parseTracker = function (track) {
-            GAME.socket.emit('ga', {
-                a: 22,
-                type: 3
-            });
-            track.sort((a, b) => a.want.type - b.want.type);
-            var con = '';
-            let zwykle_html_dsa = '';
-            let codzienne_html_dsa = '';
-            let main_quest = ``;
-            var any = false;
-            if (track && track.length) {
-                var len = track.length;
-                for (var i = 0; i < len; i++) {
-                    any = true;
-                    var qn = track[i].header;
-                    if (qn.length > 15) qn = qn.slice(0, 15) + '...';
-                    let attroqq = $(`#page_game_qb #qb_list #quest_log_tr${track[i].qb_id}`).find(`.qb_right:contains("[ Codzienne ]")`).length;
-                    if (track[i].m == 1) {
-                        main_quest += `<div id="track_quest_${track[i].qb_id}" class="qtrack option" data-option="go_teleport" data-loc="${track[i].loc}"><div class="sep3"></div><b style="color:orange;">${qn}</b> ${this.quest_want(track[i].want, track[i].qb_id)}</div>`;
-                    } else if (attroqq == 1) {
-                        codzienne_html_dsa += `<div id="track_quest_${track[i].qb_id}" class="qtrack option" data-option="go_teleport" data-loc="${track[i].loc}"><div class="sep2"></div><b style="color:#63aaff;" >${qn}</b> ${this.quest_want(track[i].want, track[i].qb_id)}</div>`;
-                    } else {
-                        zwykle_html_dsa += `<div id="track_quest_${track[i].qb_id}" class="qtrack option" data-option="go_teleport" data-loc="${track[i].loc}"><div class="sep2"></div><b>${qn}</b> ${this.quest_want(track[i].want, track[i].qb_id)}</div>`;
-                    }
-                }
-            }
-            if (any) {
-                con += codzienne_html_dsa;
-                con += zwykle_html_dsa;
-                $('#drag_con').html(`${main_quest}${con}`);
-                $('#drag_con').removeClass('scroll');
-                $('#quest_track_con').show();
-                if (!kws.settings.hide_tracker) {
-                    $('#drag_con').show();
-                } else {
-                    $('#drag_con').hide();
-                }
+        GAME.parseTracker_o = GAME.parseTracker;
+        GAME.parseTracker = function(track){
+            GAME.parseTracker_o(track);
+
+            $('#drag_con').removeClass('scroll');
+            if (!kws.settings.hide_tracker) {
+                $('#drag_con').show();
             } else {
-                $('#quest_track_con').hide();
+                $('#drag_con').hide();
             }
-            kws.markDaily();
         }
         GAME.getEmpDetails = function (petd) {
             kws.findWorker(petd, (el) => {
@@ -2742,9 +2553,6 @@ $(document).keydown((event) => {
                 });
                 return true
             }
-            setTimeout(() => {
-                kws.markDaily();
-            }, 100);
             return false
         }
         GAME.parseQuest = function (res) {
@@ -2843,46 +2651,21 @@ $(document).keydown((event) => {
                 }
             }, 300);
         };
+        GAME.endQuest_o = GAME.endQuest;
         GAME.endQuest = function (quest_end) {
-            JQS.qcc.hide();
-            $('#field_q_' + quest_end).fadeOut();
-            for (var ind in this.map_quests) {
-                if (this.map_quests.hasOwnProperty(ind)) {
-                    var len = this.map_quests[ind].length;
-                    for (var i = 0; i < len; i++) {
-                        if (this.map_quests[ind][i].qb_id == quest_end) {
-                            this.map_quests[ind][i].end = 1;
-                        }
-                    }
-                }
-            }
+            GAME.endQuest_o(quest_end);
+
             if (GAME.map_quests) {
                 kws.parseMapInfo(GAME.map_quests, "GAME.endQuest");
             }
         };
+        GAME.moveQuest_o = GAME.moveQuest;
         GAME.moveQuest = function (quest_move) {
-            if (this.char_data.loc == quest_move.loc) {
-                JQS.qcc.hide();
-                $('#field_q_' + quest_move.qb_id).fadeOut();
-                for (var ind in this.map_quests) {
-                    if (this.map_quests.hasOwnProperty(ind)) {
-                        var len = this.map_quests[ind].length;
-                        for (var i = 0; i < len; i++) {
-                            if (this.map_quests[ind][i].qb_id == quest_move.qb_id) {
-                                this.map_quests[ind][i].move = {
-                                    new_x: quest_move.x,
-                                    new_y: quest_move.y,
-                                    start: this.getmTime(),
-                                    duration: 300
-                                };
-                            }
-                        }
-                    }
-                }
-                if (GAME.map_quests) {
-                    kws.parseMapInfo(GAME.map_quests, "GAME.moveQuest");
-                }
-            } else this.endQuest(quest_move.qb_id);
+            GAME.moveQuest_o(quest_move);
+
+            if (GAME.map_quests) {
+                kws.parseMapInfo(GAME.map_quests, "GAME.moveQuest");
+            }
         };
         GAME.parseLocBons_o = GAME.parseLocBons;
         GAME.parseLocBons = function (loc_data) {
@@ -2890,7 +2673,7 @@ $(document).keydown((event) => {
             return GAME.parseLocBons_o(loc_data); //bons;
         };
         GAME.emit = function (order, data, force) {
-            if (!this.is_loading || force) {
+            if (!is_loading || force) {
                 this.load_start();
                 this.socket.emit(order, data);
             } else if (this.debug) console.log('failed order', order, data);
@@ -2898,22 +2681,7 @@ $(document).keydown((event) => {
         GAME.emitOrder = function (data, force = false) {
             this.emit('ga', data, force);
         };
-        GAME.initiate = function () {
-            $('#player_login').text(this.login);
-            $('#game_win').show();
-            if (this.char_id == 0 && this.pid > 0) {
-                this.emitOrder({
-                    a: 1
-                });
-            }
-            var len = this.servers.length,
-                con = '';
-            for (var i = 0; i < len; i++) {
-                con += '<option value="' + this.servers[i] + '">' + LNG['server' + this.servers[i]] + '</option>';
-            }
-            $('#available_servers').html(con);
-            $('#available_servers option[value=' + this.server + ']').prop('selected', true);
-        };
+
         const kulka = new ballManager();
         const ekwipunek = new ekwipunekMenager();
         let adimp = false;
