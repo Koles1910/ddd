@@ -975,7 +975,7 @@ loadRiddles(cb) {
                     <span class='kws_top_bar_section latencyElement' style='color:${lColor}'>⇅${latency}</span>
                     <span class='kws_top_bar_section sk_info' style='cursor:pointer;'>SK: <span style="color:${sk_status === "AKTYWNE" ? "lime" : "white"}">${sk_status}</span></span>
                     <span class='kws_top_bar_section train_upgr_info' style='cursor:pointer;'>KODY: <span style="color:${train_upgr === "AKTYWNE" ? "lime" : "white"}">${train_upgr}</span></span>
-                    <span class='kws_top_bar_section'>[ ${soulCardsHTML} ]</span>
+                    
                     <span class='kws_top_bar_section lvl' style='cursor:pointer;'>LVL: <span>${lvlh}/H</span></span>
                     <span class='kws_top_bar_section pvp' style='cursor:pointer;'>PVP: <span>${pvp_count}</span></span>
                     <span class='kws_top_bar_section arena' style='cursor:pointer;'>ARENA: <span>${arena_count}</span></span>
