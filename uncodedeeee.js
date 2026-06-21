@@ -1957,7 +1957,7 @@ if (typeof GAME === 'undefined') {} else {
                 limit: false,
                 Killed: false,
                 wait: 50,
-                limit2: 60,
+                limit2: 64,
                 avoidFields: [ 7000, 7001, 7002, 7003 ]
             };
             LPVM.UpdateKilledCounter = function(num) {
