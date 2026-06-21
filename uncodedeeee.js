@@ -1338,7 +1338,7 @@ if (typeof GAME === 'undefined') {} else {
                 var speed = PVP.WSP;
                 if (speed < 10) speed = 10;
                 if (speed > 100) speed = 100;
-                if ($("#pvp_Panel input[name=speed_capt]").val() == '') speed = 50;
+                if ($("#pvp_Panel input[name=speed_capt]").val() == '') speed = 95;
                 return speed / 50;
             };
             GAME.parseListPlayer_o = GAME.parseListPlayer;
