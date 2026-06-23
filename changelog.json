@@ -1,16 +1,9 @@
 [
-        {
-        "version": "v2.0",
-        "date": "2025-01-01",
-        "title": "test",
-        "desc": "Podstawowe zadania: Pałac, Studnia, Fasolki, Symbol, Ermita, Nuda, Dostawca. Dragon Ball styl.",
-        "tags": ["CORE", "MVP"]
-    },
     {
-        "version": "v1.0",
-        "date": "2025-01-01",
-        "title": "Pierwsza wersja",
-        "desc": "Podstawowe zadania: Pałac, Studnia, Fasolki, Symbol, Ermita, Nuda, Dostawca. Dragon Ball styl.",
-        "tags": ["CORE", "MVP"]
+        "version": "v2.0.1",
+        "date": "2026-06-23",
+        "title": "Aktualizacja klienta z v1 do v2.0.1",
+        "desc": "Przebudowano klienta do wersji 2.0.1. Dodano nową stronę powitalną z obsługą CD-Key. Ulepszono zarządzanie wieloma kluczami, poprawiono ogólną stabilność działania klienta.",
+        "tags": ["CLIENT", "CD-KEY", "WELCOME", "UPDATE"]
     }
 ]
