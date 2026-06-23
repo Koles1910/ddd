@@ -1,0 +1,37 @@
+[
+    {
+        "version": "v2.1",
+        "date": "2025-01-12",
+        "title": "Anielskie Karty + Born Detection",
+        "desc": "Dodano Anielska karta LvL1-4 z walką i green detection. System born automatycznie pomija zadania za wysokiego borna. Handlarze, Beerus, Mistyk.",
+        "tags": ["H-BORN", "KARTY", "SMART"]
+    },
+    {
+        "version": "v2.1",
+        "date": "2025-01-15",
+        "title": "Anielskie Karty + Born Detection",
+        "desc": "Dodano Anielska karta LvL1-4 z walką i green detection. System born automatycznie pomija zadania za wysokiego borna. Handlarze, Beerus, Mistyk.",
+        "tags": ["H-BORN", "KARTY", "SMART"]
+    },
+    {
+        "version": "v2.0",
+        "date": "2025-01-10",
+        "title": "Nowy Panel + Timer Queue",
+        "desc": "Przebudowany panel ZCA w stylu AutoDaily. Checkboxy, grupy zwijalne, inteligentny system timerów wielokrotnych. Kucharz, Scalacz, Strażnik.",
+        "tags": ["PANEL", "TIMER", "UI"]
+    },
+    {
+        "version": "v1.5",
+        "date": "2025-01-05",
+        "title": "Auto Aktywki + Filtr Questów",
+        "desc": "Drugi panel do aktywności dziennych. Filtrowanie trackera po kategoriach. Menedżer kart z zakładkami.",
+        "tags": ["AKTYWKI", "FILTR", "KARTY"]
+    },
+    {
+        "version": "v1.0",
+        "date": "2025-01-01",
+        "title": "Pierwsza wersja",
+        "desc": "Podstawowe zadania: Pałac, Studnia, Fasolki, Symbol, Ermita, Nuda, Dostawca. Dragon Ball styl.",
+        "tags": ["CORE", "MVP"]
+    }
+]
