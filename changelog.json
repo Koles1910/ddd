@@ -1,5 +1,11 @@
 [
-    
+        {
+        "version": "v2.0",
+        "date": "2025-01-01",
+        "title": "test",
+        "desc": "Podstawowe zadania: Pałac, Studnia, Fasolki, Symbol, Ermita, Nuda, Dostawca. Dragon Ball styl.",
+        "tags": ["CORE", "MVP"]
+    }
     {
         "version": "v1.0",
         "date": "2025-01-01",
