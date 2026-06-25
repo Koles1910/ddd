@@ -3,7 +3,7 @@
         "version": "v2.0.2",
         "date": "2026-06-25",
         "title": "Logowanie",
-        "desc": "Dodano funkcję auto logowania. Po zapisaniu danych konta przy pierwszym logowaniu klient automatycznie uzupełnia formularz logowania dla przypisanego CD-Key przy kolejnych uruchomieniach.",
+        "desc": "Dodano funkcję auto logowania. Po zapisaniu danych konta przy pierwszym logowaniu klient automatycznie uzupełnia formularz logowania dla przypisanego CD-Key przy kolejnych uruchomieniach."
     },
     {
         "version": "v2.0.1",
