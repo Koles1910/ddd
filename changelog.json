@@ -1,5 +1,11 @@
 [
     {
+        "version": "v2.0.3",
+        "date": "2026-06-26",
+        "title": "Optymalizacja nawigacji i teleportów",
+        "desc": "Zmieniono mechanikę przechodzenia między lokacjami w zadaniach na Fasolki oraz na Studni Życzeń. Skrypt klika teraz poprawnie przycisk 'Przejdź' zamiast wymuszać akcję klawiszem X, co poprawia stabilność przechodzenia po mapie."
+    },
+    {
         "version": "v2.0.2",
         "date": "2026-06-25",
         "title": "Logowanie",
