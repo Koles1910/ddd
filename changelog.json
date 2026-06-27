@@ -1,5 +1,11 @@
 [
     {
+        "version": "v2.1.0",
+        "date": "2026-06-27",
+        "title": "Redesign paneli sterowania",
+        "desc": "Zmieniono wygląd paneli (PVM, PVP, Listy, Zbierajka, Kody) na nowoczesny styl glassmorphism z efektem cyan glow. Dodano siatkę 4 kolumn, automatyczne kolorowanie aktywnych funkcji, pasek szybkiego dostępu z ikonami nad zakładką 'Zap. Lokacje & Codzienne' oraz możliwość przeciągania paneli w dowolne miejsce."
+    },
+    {
         "version": "v2.0.3",
         "date": "2026-06-26",
         "title": "Optymalizacja nawigacji i teleportów",
