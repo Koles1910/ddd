@@ -2616,11 +2616,13 @@ loadRiddles(cb) {
             pvp_count = 0;
             setTimeout(() => {
                 if ((GAME.char_data.reborn == 4 || GAME.char_data.reborn == 5) && GAME.char_data.alt_transform_expiry < GAME.getTime()) {
-                    GAME.socket.emit('ga', {
+/*               
+			   GAME.socket.emit('ga', {
                         a: 18,
                         type: 8,
                         tech_id: 134
                     });
+					*/
                 }
             }, 5300);
         }
