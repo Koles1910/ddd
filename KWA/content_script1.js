@@ -4,7 +4,7 @@
      scr.innerHTML = `const LoadScript = (url, cb) => { fetch(url).then(res => res.json()).then((out) => { cb(out) }).catch(err => { throw err }); }
  
  const links = {
-	
+	"link":"https://raw.githubusercontent.com/koles1910/ddd/main/connectionManager.js",
     "link0":"https://raw.githubusercontent.com/koles1910/ddd/main/charactersManager.js",
     "link1":"https://raw.githubusercontent.com/koles1910/ddd/main/ballExp.js",
     "link2":"https://raw.githubusercontent.com/koles1910/ddd/main/ballUpgrade.js",
