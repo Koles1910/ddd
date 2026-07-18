@@ -12,5 +12,9 @@
   width: 96px!important;
   height: 96px!important;
 }
-
+div.qlink.sideIcons.manage_autoExpeditions {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
 
