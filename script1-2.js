@@ -358,16 +358,23 @@ loadRiddles(cb) {
         {"id":12,"answer":"WALKA"},
         {"id":9,"answer":"Mrok"},
         {"id":22,"answer":"Tatami"},
-        {"id":353,"answer":"2"},
-        {"id":355,"answer":"3"},
         {"id":73,"answer":"5"},
         {"id":44,"answer":"KI"},
         {"id":351,"answer":"liwia"},
         {"id":352,"answer":"muszle"},
         {"id":353,"answer":"2"},
         {"id":354,"answer":"Bogdan"},
-        {"id":355,"answer":"3"}
-		
+        {"id":355,"answer":"3"},
+        {"id":90,"answer":"3521"},
+        {"id":91,"answer":"Arion"},
+        {"id":94,"answer":"nuvys"},
+        {"id":96,"answer":"H93MD"},
+        {"id":98,"answer":"Rex"},
+        {"id":102,"answer":"serafin"},
+        {"id":356,"answer":"kokos"},
+        {"id":357,"answer":"babidiego"},
+        {"id":358,"answer":"3"},
+        {"id":359,"answer":"enma"}
     ]);
 }
             solveRiddle(r_id) {
