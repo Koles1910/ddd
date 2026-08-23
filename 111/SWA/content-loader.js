@@ -1,8 +1,6 @@
 (function bootstrapSwaLoader() {
   const bootScript = document.currentScript;
   const configUrl = bootScript ? bootScript.dataset.configUrl : '';
-  
-  // Ustawiamy branch na 'main'
   const branch = (bootScript && bootScript.dataset.branch) || 'main';
 
   window.__SWA_BRANCH__ = branch;
@@ -18,9 +16,6 @@
 
   function buildModuleUrl(moduleConfig) {
     if (moduleConfig.url) return moduleConfig.url;
-    
-    // POPRAWIONA KONSTRUKCJA LINKU:
-    // Użytkownik: Koles1910, Repo: ddd, Branch: main, Folder: 111
     return 'https://raw.githubusercontent.com/Koles1910/ddd/' + branch + '/111/' + moduleConfig.path;
   }
 
@@ -29,21 +24,31 @@
     script.type = 'text/javascript';
     script.dataset.swaModule = moduleId;
     script.textContent = code;
+
     (document.head || document.documentElement).appendChild(script);
     script.remove();
   }
 
   async function fetchModuleCode(moduleConfig) {
     const url = buildModuleUrl(moduleConfig);
-    console.log('[SWA] Pobieranie:', url); // Logujemy adres, żeby widzieć czy jest poprawny
-    
+    console.log('[SWA] Pobieranie:', url);
+
     const response = await fetch(url, { cache: 'no-store' });
 
     if (!response.ok) {
       throw new Error(moduleConfig.id + ' HTTP ' + response.status + ' na adresie: ' + url);
     }
 
-    return response.text();
+    let code = await response.text();
+
+    // ★ AUTOMATYCZNA NAPRAWA LINKÓW W JAKICHKOLWIEK PLIKACH ★
+    // Zamienia stary adres autorski na Twój własny folder na GitHubie
+    const oldRepo = 'https://raw.githubusercontent.com/SWAssistant1/SWAssistant/' + branch + '/';
+    const newRepo = 'https://raw.githubusercontent.com/Koles1910/ddd/' + branch + '/111/';
+
+    code = code.split(oldRepo).join(newRepo);
+
+    return code;
   }
 
   async function runLoader() {
