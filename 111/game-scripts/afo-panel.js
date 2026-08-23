@@ -25,7 +25,9 @@ if (typeof GAME !== 'undefined') {
         }
 
         function fetchFile(file, attempt, onSuccess, onFailure) {
-            var url = 'https://raw.githubusercontent.com/SWAssistant1/SWAssistant/' + branch + '/' + file + '?t=' + Date.now();
+            // ★ POPRAWIONY ADRES: Koles1910/ddd/main/111/ ★
+            var url = 'https://raw.githubusercontent.com/Koles1910/ddd/' + branch + '/111/' + file + '?t=' + Date.now();
+            
             $.get(url, function (data) {
                 onSuccess(data);
             }).fail(function () {
