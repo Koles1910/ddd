@@ -21,7 +21,7 @@
     
     // POPRAWIONA KONSTRUKCJA LINKU:
     // Użytkownik: Koles1910, Repo: ddd, Branch: main, Folder: 111
-    return 'https://raw.githubusercontent.com/Koles1910/ddd/' + branch + '/111/SWA/' + moduleConfig.path;
+    return 'https://raw.githubusercontent.com/Koles1910/ddd/' + branch + '/111/' + moduleConfig.path;
   }
 
   function injectModuleCode(moduleId, code) {
