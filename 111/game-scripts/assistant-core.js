@@ -39,7 +39,9 @@ if (typeof GAME !== 'undefined' || !extrapremium) {
         }
 
         function fetchFile(file, attempt, onSuccess, onFailure) {
-            var url = 'https://raw.githubusercontent.com/SWAssistant1/SWAssistant/' + branch + '/' + file + '?t=' + Date.now();
+            // ★ POPRAWIONY ADRES: Ładuje pod-pliki z Twojego repozytorium na GitHub ★
+            var url = 'https://raw.githubusercontent.com/Koles1910/ddd/' + branch + '/111/' + file + '?t=' + Date.now();
+            
             $.get(url, function (data) {
                 onSuccess(data);
             }).fail(function () {
