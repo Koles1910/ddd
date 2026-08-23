@@ -9,16 +9,18 @@
 
   const fallbackModules = [
     { id: 'characters-manager', path: 'game-scripts/characters-manager.js' },
-    { id: 'ball-exp', path: 'game-scripts/ball-exp.js' },
-    { id: 'ball-upgrade', path: 'game-scripts/ball-upgrade.js' },
-    { id: 'ball-reset', path: 'game-scripts/ball-reset.js' },
-    { id: 'ball-manager', path: 'game-scripts/ball-manager.js' },
-    { id: 'assistant-core', path: 'game-scripts/assistant-core.js' }
+    { id: 'ball-exp',           path: 'game-scripts/ball-exp.js' },
+    { id: 'ball-upgrade',       path: 'game-scripts/ball-upgrade.js' },
+    { id: 'ball-reset',         path: 'game-scripts/ball-reset.js' },
+    { id: 'ball-manager',       path: 'game-scripts/ball-manager.js' },
+    { id: 'assistant-core',     path: 'game-scripts/assistant-core.js' }
   ];
 
   function buildModuleUrl(moduleConfig) {
     if (moduleConfig.url) return moduleConfig.url; // backwards compatibility
-    return 'https://raw.githubusercontent.com/Koles1910/ddd/111/' + branch + '/' + moduleConfig.path;
+    
+    // ★ POPRAWIONA KOLEJNOŚĆ: repo -> branch (main) -> folder (111) -> plik ★
+    return 'https://raw.githubusercontent.com/Koles1910/ddd/' + branch + '/111/' + moduleConfig.path;
   }
 
   function injectModuleCode(moduleId, code) {
@@ -32,10 +34,11 @@
   }
 
   async function fetchModuleCode(moduleConfig) {
-    const response = await fetch(buildModuleUrl(moduleConfig), { cache: 'no-store' });
+    const url = buildModuleUrl(moduleConfig);
+    const response = await fetch(url, { cache: 'no-store' });
 
     if (!response.ok) {
-      throw new Error(moduleConfig.id + ' HTTP ' + response.status);
+      throw new Error(moduleConfig.id + ' HTTP ' + response.status + ' na adresie: ' + url);
     }
 
     return response.text();
