@@ -17,60 +17,83 @@ if (typeof GAME !== 'undefined') {
 
         var MAX_ATTEMPTS = 4;
 
-        function injectCode(code) {
-            var script = document.createElement('script');
-            script.textContent = code;
-            document.head.appendChild(script);
-            script.remove();
+        function injectCode(code, fileName) {
+            try {
+                var script = document.createElement('script');
+                script.textContent = code;
+                (document.head || document.documentElement).appendChild(script);
+                script.remove();
+            } catch (err) {
+                console.error('[AFO] Błąd wykonania kodu w pliku: ' + fileName, err);
+            }
         }
 
         function fetchFile(file, attempt, onSuccess, onFailure) {
-            // ★ POPRAWIONY ADRES: Koles1910/ddd/main/111/ ★
             var url = 'https://raw.githubusercontent.com/Koles1910/ddd/' + branch + '/111/' + file + '?t=' + Date.now();
             
-            $.get(url, function (data) {
-                onSuccess(data);
-            }).fail(function () {
-                if (attempt >= MAX_ATTEMPTS) {
-                    onFailure();
-                    return;
-                }
-                console.warn('[AFO] Retry', attempt + 1, 'for', file);
-                setTimeout(() => fetchFile(file, attempt + 1, onSuccess, onFailure), 400 * attempt);
-            });
+            fetch(url, { cache: 'no-store' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status + ' (' + response.statusText + ')');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    onSuccess(data);
+                })
+                .catch(error => {
+                    console.warn('[AFO] Nieudana próba (' + attempt + '/' + MAX_ATTEMPTS + ') dla: ' + file, 'Adres:', url, 'Błąd:', error.message);
+                    if (attempt >= MAX_ATTEMPTS) {
+                        onFailure(error);
+                        return;
+                    }
+                    setTimeout(() => fetchFile(file, attempt + 1, onSuccess, onFailure), 400 * attempt);
+                });
         }
 
         function loadAll() {
             var remaining = files.length;
+            var errors = [];
 
             function oneDone() {
                 remaining--;
                 if (remaining === 0) {
-                    bootstrap();
+                    if (errors.length > 0) {
+                        console.error('[AFO] Lista brakujących plików:', errors);
+                        GAME.komunikat('Nie udało się załadować plików AFO:\n' + errors.join('\n'));
+                    } else {
+                        bootstrap();
+                    }
                 }
             }
 
             files.forEach(function (file) {
                 fetchFile(file, 1, function (data) {
-                    injectCode(data);
-                    console.info('[AFO] Module injected:', file);
+                    injectCode(data, file);
+                    console.info('[AFO] Pomyślnie wstrzyknięto:', file);
                     oneDone();
-                }, function () {
-                    console.error('[AFO] Module load failed after retries:', file);
-                    GAME.komunikat('Błąd ładowania AFO (' + file + '), odśwież stronę i spróbuj ponownie!');
+                }, function (err) {
+                    console.error('[AFO] BŁĄD POBIERANIA:', file, err);
+                    errors.push(file);
                     oneDone();
                 });
             });
         }
 
         function bootstrap() {
+            console.log('[AFO] Wszystkie pliki załadowane, uruchamiam panel AFO...');
             setTimeout(() => {
-                if (GAME.maploaded) {
+                if (GAME.maploaded && typeof RES !== 'undefined' && RES.listMines) {
                     RES.listMines();
                 }
             }, 500);
 
-            createPanel();
+            if (typeof createPanel === 'function') {
+                createPanel();
+            } else {
+                console.error('[AFO] Funkcja createPanel() nie istnieje! Sprawdź czy core.js się załadował.');
+            }
+
             setTimeout(() => {
                 GAME.socket.emit('ga', {
                     a: 50,
@@ -79,16 +102,10 @@ if (typeof GAME !== 'undefined') {
                 });
             }, 300);
             setTimeout(() => {
-                GAME.emitOrder({
-                    a: 39,
-                    type: 0
-                });
+                GAME.emitOrder({ a: 39, type: 0 });
             }, 600);
             setTimeout(() => {
-                GAME.emitOrder({
-                    a: 39,
-                    type: 23
-                });
+                GAME.emitOrder({ a: 39, type: 23 });
             }, 900);
         }
 
