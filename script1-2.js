@@ -374,7 +374,12 @@ loadRiddles(cb) {
         {"id":356,"answer":"kokos"},
         {"id":357,"answer":"babidiego"},
         {"id":358,"answer":"3"},
-        {"id":359,"answer":"enma"}
+        {"id":359,"answer":"enma"},
+        {"id":365,"answer":"Matka zarazy"},
+		{"id":366,"answer":"3"},
+		{"id":367,"answer":"Trujące moczary wiedźm"},
+		{"id":368,"answer":"Dynie"}
+		
     ]);
 }
             solveRiddle(r_id) {
